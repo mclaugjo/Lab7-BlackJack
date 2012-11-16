@@ -20,25 +20,15 @@
 ;***********************************************************
 ;*	Internal Register Definitions and Constants
 ;***********************************************************
-.def	mpr = r16				; Multi-Purpose Register
-.def	cmdr = r17				; Command Register
-
-.equ	EngEnR = 4				; Right Engine Enable Bit
-.equ	EngEnL = 7				; Left Engine Enable Bit
-.equ	EngDirR = 5				; Right Engine Direction Bit
-.equ	EngDirL = 6				; Left Engine Direction Bit
-
 .equ	BotID =  0b00110011		; Unique BotID = $33 (MSB = 0) 
 
-; Use these commands between the remote and TekBot
+; Use these commands between the server and player (OR WITH 4 BIT BOT ID TO INCLUDE ID)
 ; MSB = 1 thus:
-; commands are shifted right by one and ORed with 0b10000000 = $80
-.equ	MovFwd =  ($80|1<<(EngDirR-1)|1<<(EngDirL-1))	;0b10110000 Move Forwards Command
-.equ	MovBck =  ($80|$00)								;0b10000000 Move Backwards Command
-.equ	TurnR =   ($80|1<<(EngDirL-1))					;0b10100000 Turn Right Command
-.equ	TurnL =   ($80|1<<(EngDirR-1))					;0b10010000 Turn Left Command
-.equ	Halt =    ($80|1<<(EngEnR-1)|1<<(EngEnL-1))		;0b11001000 Halt Command
-.equ	Freez =   ($80|$F8)								;0b11111000 Freeze Command
+.equ	New		= 0b10000000				;0b1000XXXX New Game Command X's will have ID
+.equ	Join 	= 0b10010000				;0b1001XXXX Join Game Command
+.equ	Start 	= 0b10100000				;0b1010XXXX Start Game Command 
+.equ	Winner 	= 0b11110000				;0b1111XXXX Winner Command (OR WITH 4 BIT BOT ID TO INCLUDE ID)
+.equ	Ask 	= 0b10110000				;0b1011XXXX Ask for Scored Command (OR WITH 4 BIT BOT ID TO INCLUDE ID)
 ;***********************************************************
 ;*	Start of Code Segment
 ;***********************************************************
