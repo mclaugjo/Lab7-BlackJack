@@ -1,0 +1,32 @@
+<ASSEMBLER_INFO>
+ <VERSION>2.1.42</VERSION>
+ <DEVICE>ATmega128</DEVICE>
+ <WORKING_DIR>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack</WORKING_DIR>
+ <INCLUDE_PATH>
+  <DIR>C:\Program Files (x86)\Atmel\AVR Tools\AvrAssembler2\Appnotes</DIR>
+ </INCLUDE_PATH>
+ <SOURCE_FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</SOURCE_FILE>
+ <INCLUDED_FILES>
+  <FILE>C:\Program Files (x86)\Atmel\AVR Tools\AvrAssembler2\Appnotes\m128def.inc</FILE>
+ </INCLUDED_FILES>
+ <OBJECT_FILES>
+  <FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Lab7-BlackJack.obj</FILE>
+ </OBJECT_FILES>
+ <HEX_FILES>
+  <FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Lab7-BlackJack.hex</FILE>
+ </HEX_FILES>
+ <OUTPUT_FILES>
+  <FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Lab7-BlackJack.map</FILE>
+ </OUTPUT_FILES>
+ <LABELS>
+  <INIT><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>56</LINE></INIT>
+  <PLAYERS><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>161</LINE></PLAYERS>
+  <SCORES><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>165</LINE></SCORES>
+  <MAIN><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>98</LINE></MAIN>
+  <addPlayer><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>118</LINE></addPlayer>
+  <STARTGAME><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>135</LINE></STARTGAME>
+  <ASKSCORES><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>151</LINE></ASKSCORES>
+  <END_PLAYERS><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>163</LINE></END_PLAYERS>
+  <END_SCORES><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>167</LINE></END_SCORES>
+ </LABELS>
+</ASSEMBLER_INFO>
