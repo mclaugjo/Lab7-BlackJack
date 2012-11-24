@@ -1,5 +1,5 @@
 
-AVRASM ver. 2.1.42  C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm Mon Nov 19 13:45:03 2012
+AVRASM ver. 2.1.42  C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm Fri Nov 23 19:10:21 2012
 
 
 EQU  SIGNATURE_000 0000001e
@@ -871,19 +871,25 @@ DEF  mpr          r16
 DEF  sigr         r17
 DEF  idreg        r18
 DEF  playercnt    r19
+DEF  timer        r20
 EQU  NUM_PLAYERS  00000002
-EQU  BoardID      00000003
-EQU  New          00000080
-EQU  Join         00000090
-EQU  Start        000000a0
-EQU  Winner       000000f0
-EQU  Ask          000000b0
+EQU  BOARDID      00000003
+EQU  TIMEOUT      00000064
+EQU  NEW          00000080
+EQU  JOIN         00000090
+EQU  START        000000a0
+EQU  RECIEVE      000000c0
+EQU  ASK          000000b0
+EQU  WINNER       000000f0
 CSEG INIT         00000046
 DSEG PLAYERS      00000100
 DSEG SCORES       00000102
 CSEG MAIN         00000060
 CSEG addPlayer    0000006c
 CSEG STARTGAME    00000072
-CSEG ASKSCORES    0000007a
+CSEG loopStart    00000073
+CSEG checkRcvd    0000007e
+CSEG started      0000008e
+CSEG ASKSCORES    00000090
 DSEG END_PLAYERS  00000102
 DSEG END_SCORES   00000104

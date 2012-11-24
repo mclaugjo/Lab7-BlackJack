@@ -11,7 +11,7 @@
 ;***********************************************************
 ;*
 ;*	 Author: Devlin Junker
-;*	   Date: November 11th 2012
+;*	   Date: November 23rd 2012
 ;*
 ;***********************************************************
 .include "m128def.inc"			; Include definition file
@@ -23,18 +23,22 @@
 .def 	sigr	= r17			; Register to Hold Signal
 .def 	idreg	= r18			; Register to Hold Board ID
 .def 	playercnt = r19			; Register to Hold Number of Players
+.def 	timer 	= r20
 
 .equ 	NUM_PLAYERS = 2
 
-.equ	BoardID	= 0b00000011	; Unique Board ID = $3 (MSB = 0) 
+.equ	BOARDID	= 0b00000011	; Unique Board ID = $0 3 (MSB = 0) 
+
+.equ 	TIMEOUT = 100
 
 ; Use these commands between the server and player (OR WITH 4 BIT BOT ID TO INCLUDE ID)
 ; MSB = 1 thus:
-.equ	New		= 0b10000000	;0b1000XXXX New Game Command X's will have ID
-.equ	Join 	= 0b10010000	;0b1001XXXX Join Game Command
-.equ	Start 	= 0b10100000	;0b1010XXXX Start Game Command 
-.equ	Winner 	= 0b11110000	;0b1111XXXX Winner Command (OR WITH 4 BIT BOT ID TO INCLUDE ID)
-.equ	Ask 	= 0b10110000	;0b1011XXXX Ask for Scored Command (OR WITH 4 BIT BOT ID TO INCLUDE ID)
+.equ	NEW		= 0b10000000	;0b1000XXXX New Game Command X's will have ID
+.equ	JOIN 	= 0b10010000	;0b1001XXXX Join Game Command
+.equ	START 	= 0b10100000	;0b1010XXXX Start Game Command 
+.equ	RECIEVE	= 0b11000000	;0b1010XXXX Recieved Command Signal
+.equ	ASK 	= 0b10110000	;0b1011XXXX Ask for Score Command (OR WITH 4 BIT BOT ID TO INCLUDE ID)
+.equ	WINNER 	= 0b11110000	;0b1111XXXX Winner Command (OR WITH 4 BIT BOT ID TO INCLUDE ID)
 
 ;***********************************************************
 ;*	Start of Code Segment
@@ -62,9 +66,9 @@ INIT:
 
 		; Initialize Port D for input
 		ldi mpr, $00
-		out DDRD, mpr		; Set Port D as Input
+		out DDRD, mpr			; Set Port D as Input
 		ldi mpr, $F3
-		out PORTD, mpr		; Set Input to Hi-Z
+		out PORTD, mpr			; Set Input to Hi-Z
 		out PIND, mpr
 	
 		;USART1
@@ -98,7 +102,7 @@ INIT:
 MAIN:
 		; Loop for Recieve Complete
 		lds mpr, UCSR1A
-		sbrs mpr, RXC1		; If Recieve Complete Skip rjmp below
+		sbrs mpr, RXC1			; If Recieve Complete Skip rjmp below
 		rjmp MAIN
 
 		; Load Recieved Signal into Signal Register
@@ -107,13 +111,13 @@ MAIN:
 		; Copy to ID register
 		mov idreg, sigr
 
-		andi sigr, $F0	; Mask Out ID
-		andi idreg, $0F	; Mask Out Command
+		andi sigr, $F0			; Mask Out ID
+		andi idreg, $0F			; Mask Out Command
 
-		cpi sigr, Join	; Compare Command against Join
-		breq addPlayer	; If Equal, add Player
+		cpi sigr, JOIN			; Compare Command against Join
+		breq addPlayer			; If Equal, add Player
 
-		rjmp MAIN		; Otherwise, return to beginning and wait for new signal
+		rjmp MAIN				; Otherwise, return to beginning and wait for new signal
 
 		addPlayer:
 			
@@ -125,33 +129,140 @@ MAIN:
 			
 			; Check If We have Number of players specified
 			cpi playercnt, NUM_PLAYERS
-			brne MAIN	; If Not Return to Main and wait for new signal
+			brne MAIN			; If Not, Return to Main and wait for new signal
 			
-			rcall STARTGAME	; If so, call STARTGAME
+			rcall STARTGAME		; If so, call STARTGAME
+		
+		ldi playercnt, 0
 
 		rjmp MAIN
 
 
 STARTGAME:
-		; Enable Transmitter
-		ldi mpr, (1<<TXEN1)
-		sts UCSR1B, mpr
+		
+		ld idreg, -X
 
-		; Load Start Game Command and ServerID
-		ldi mpr, Start|BoardID
-		sts UDR1, mpr	; Send Command
+		startLoop:
+			; Enable Transmitter
+			ldi mpr, (1<<TXEN1)
+			sts UCSR1B, mpr			
 
-		; CHECK FOR RECIEVE GAME
+			; Load Start Game Command and ServerID
+			mov mpr, idreg
+			ori mpr, START
+			sts UDR1, mpr		; Send Command
 
+			ldi timer, TIMEOUT
+		
+			; Enable Reciever
+			ldi mpr, (1<<RXEN1)
+			sts UCSR1B, mpr
+
+			checkRcvd:
+				dec timer
+				breq startLoop
+				lds mpr, UCSR1A
+				sbrs mpr, RXC1
+				rjmp checkRcvd
+
+				lds sigr, UDR1
+				
+				mov mpr, idreg
+				ori mpr, RECIEVE
+
+				cp sigr, mpr
+				brne checkRcvd
+			
+			cpi XL, low(PLAYERS<<1)
+			breq started
+
+			ld idreg, -X
+			rjmp startLoop
+
+
+	started:
 		; After All Boards Recieved, Call ASKSCORES
 		rcall ASKSCORES
 		
 		ret
 
 ASKSCORES:
+		ld idreg, X+
+
+		scoreLoop:
+			; Enable Transmitter
+			ldi mpr, (1<<TXEN1)
+			sts UCSR1B, mpr			
+
+			; Load Start Game Command and ServerID
+			mov mpr, idreg
+			ori mpr, ASK
+			sts UDR1, mpr		; Send Command
+
+			ldi timer, TIMEOUT
+		
+			; Enable Reciever
+			ldi mpr, (1<<RXEN1)
+			sts UCSR1B, mpr
+
+			checkScore:
+				dec timer
+				breq scoreLoop
+				lds mpr, UCSR1A
+				sbrs mpr, RXC1
+				rjmp checkScore
+
+				lds sigr, UDR1
+
+				sbrc sigr
+				rjmp checkScore
+				
+			st Y+, sigr
+			
+			cpi YL, low(END_SCORES<<1)
+			breq ended
+
+			ld idreg, X+
+			rjmp scoreLoop
+
+	ended:
+		rcall FINDWINNER
+
+		ret
 
 
+FINDWINNER:
+		ldi sigr, 0
 
+		winnerLoop:
+			ld idreg, -X
+			ld mpr, -Y
+			cp mpr, sigr
+			brlt keep
+			
+			mov sigr, mpr
+			mov playercnt, idreg
+			
+			keep:
+
+			cpi idreg, low(PLAYERS<<1)
+			brne winnerLoop
+			
+		rcall SENDWINNER
+
+		ret
+
+SENDWINNER:
+		; Enable Transmitter
+		ldi mpr, (1<<TXEN1)
+		sts UCSR1B, mpr			
+	
+		; Load Start Game Command and ServerID
+		mov mpr, playercnt
+		ori mpr, WINNER
+		sts UDR1, mpr		; Send Command
+
+		ret
 
 ;***********************************************************
 ;*	Stored Program Data
@@ -166,8 +277,6 @@ SCORES:
 .byte NUM_PLAYERS
 END_SCORES:
 
-		
-.cseg
 ;***********************************************************
 ;*	Additional Program Includes
 ;***********************************************************
