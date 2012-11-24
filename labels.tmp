@@ -19,17 +19,24 @@
   <FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Lab7-BlackJack.map</FILE>
  </OUTPUT_FILES>
  <LABELS>
-  <INIT><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>60</LINE></INIT>
-  <PLAYERS><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>199</LINE></PLAYERS>
-  <SCORES><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>203</LINE></SCORES>
-  <MAIN><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>102</LINE></MAIN>
-  <addPlayer><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>122</LINE></addPlayer>
-  <STARTGAME><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>139</LINE></STARTGAME>
-  <loopStart><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>143</LINE></loopStart>
-  <checkRcvd><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>159</LINE></checkRcvd>
-  <started><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>183</LINE></started>
-  <ASKSCORES><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>189</LINE></ASKSCORES>
-  <END_PLAYERS><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>201</LINE></END_PLAYERS>
-  <END_SCORES><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>205</LINE></END_SCORES>
+  <INIT><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>62</LINE></INIT>
+  <PLAYERS><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>271</LINE></PLAYERS>
+  <SCORES><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>275</LINE></SCORES>
+  <MAIN><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>101</LINE></MAIN>
+  <addPlayer><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>121</LINE></addPlayer>
+  <END_PLAYERS><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>273</LINE></END_PLAYERS>
+  <STARTGAME><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>135</LINE></STARTGAME>
+  <startLoop><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>139</LINE></startLoop>
+  <checkRcvd><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>155</LINE></checkRcvd>
+  <started><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>178</LINE></started>
+  <ASKSCORES><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>184</LINE></ASKSCORES>
+  <scoreLoop><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>187</LINE></scoreLoop>
+  <checkScore><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>204</LINE></checkScore>
+  <END_SCORES><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>277</LINE></END_SCORES>
+  <ended><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>225</LINE></ended>
+  <FINDWINNER><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>231</LINE></FINDWINNER>
+  <winnerLoop><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>235</LINE></winnerLoop>
+  <keep><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>244</LINE></keep>
+  <SENDWINNER><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>254</LINE></SENDWINNER>
  </LABELS>
 </ASSEMBLER_INFO>
