@@ -164,6 +164,9 @@ MAIN:
 ; 		
 ;***********************************************************
 INCREMENTRANDOM:
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;		
+		; INCREMENT COUNTER REGISTER 
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 		ret
 
@@ -240,7 +243,9 @@ SETUP:
 			dec		ReadCnt		; Decrement Read Counter
 			brne	beginScore	; Continue untill all data is read
 		
-		
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		;SETUP TIMER OVERFLOW INTERRUPTS	
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 		rcall GAME
 
@@ -252,10 +257,11 @@ SETUP:
 ;***********************************************************
 GAME:
 		
-		mov		mpr, counter
-		andi	mpr, $1F
+		mov		mpr, counter	; Grab Random Value from counter register
+		andi	mpr, $1F		; Mask so only 5 bits available (0 - 31)
+		breq 	GAME			; If mpr == 0, get new value
 
-		add		scorereg, mpr
+		add		scorereg, mpr	; Add Value of 1 - 31 to score register
 		
 		mov		mpr, scorereg	; MOVE DATA TO MPR FOR THE B2A CALL
 								; SET THE INITIAL X-PTR ADDRESS
@@ -309,6 +315,10 @@ GAME:
 		dec		ReadCnt		; Decrement Read Counter
 		brne	writeWait	; Continue untill all data is read
 		rcall	LCDWrLn2	; WRITE LINE 2 DATA
+
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
+		; DISABLE TIMER OVERFLOW INTERRUPTS
+		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			
 		; Wait to be asked for score
 		rcall	WAITFORASK
