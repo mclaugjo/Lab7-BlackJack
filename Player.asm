@@ -18,25 +18,31 @@
 ;***********************************************************
 ;*	Internal Register Definitions and Constants
 ;***********************************************************
-.def	mpr = r16
-.def	sigr = r17
-.def	waitcnt = r18
-.def	ilcnt	= r19
-.def	olcnt = r20
-.def ReadCnt = r23
+.def 	counter = r14
+.def	sigr 	= r15
+.def	mpr 	= r16
 
-.equ	BotID =  0b00000001		; Unique BotID = $33 (MSB = 0) 
+.def 	scorereg= r23
+.def 	ReadCnt = r24
+.def	timer	= r25
+
+.equ	BOARDID	= 0b00000001	; Unique Board ID = $01 (MSB = 0) 
+
+.equ	TIMEOUT = 100			; Timeout Interval
+
+.equ	ScoreAddr = $0130		; Address of ASCII counter text
 
 ; Use these commands between the server and player (OR WITH 4 BIT BOT ID TO INCLUDE ID)
 ; MSB = 1 thus:
-.equ	New		= 0b10000000				;0b1000XXXX New Game Command X's will have ID
-.equ	Join 	= 0b10010000				;0b1001XXXX Join Game Command
-.equ	Start 	= 0b10100000				;0b1010XXXX Start Game Command 
-.equ	Winner 	= 0b11110000				;0b1111XXXX Winner Command (OR WITH 4 BIT BOT ID TO INCLUDE ID)
-.equ	Ask 	= 0b10110000				;0b1011XXXX Ask for Scored Command (OR WITH 4 BIT BOT ID TO INCLUDE ID)
+.equ	NEW		= 0b10000000	;0b1000XXXX New Game Command (OR WITH 4 BIT BOT ID TO INCLUDE ID)
+.equ	JOIN 	= 0b10010000	;0b1001XXXX Join Game Command (OR WITH 4 BIT BOT ID TO INCLUDE ID)
+.equ	START 	= 0b10100000	;0b1010XXXX Start Game Command (OR WITH 4 BIT BOT ID TO INCLUDE ID)
+.equ	RECIEVE	= 0b11000000	;0b1010XXXX Recieved Command Signal (OR WITH 4 BIT BOT ID TO INCLUDE ID)
+.equ	ASK 	= 0b10110000	;0b1011XXXX Ask for Score Command (OR WITH 4 BIT BOT ID TO INCLUDE ID)
+.equ	WINNER 	= 0b11110000	;0b1111XXXX Winner Command (OR WITH 4 BIT BOT ID TO INCLUDE ID)
 
-.equ	WskrY = 0				; "Yes" Whisker Input Bit
-.equ	WskrN = 1				; "No" Whisker Input Bit
+.equ	WskrY 	= 0				; "Yes" Whisker Input Bit
+.equ	WskrN 	= 1				; "No" Whisker Input Bit
 ;***********************************************************
 ;*	Start of Code Segment
 ;***********************************************************
@@ -48,6 +54,9 @@
 .org	$0000					; Beginning of IVs
 		rjmp 	INIT			; Reset interrupt
 
+.org	$001E					; Timer Overflow 0 Interrupt Vector
+		rcall INCREMENTRANDOM 	; Increment the Random Number Value
+		reti
 
 .org	$0046					; End of Interrupt Vectors
 
@@ -55,90 +64,82 @@
 ; Program Initialization
 ;-----------------------------------------------------------
 INIT:
-		;Stack Pointer 
+		; Stack Pointer 
 		ldi mpr, HIGH(RAMEND)
 		out SPH, mpr
 		ldi mpr, LOW(RAMEND)
 		out SPL, mpr
 
-		; Initialize Port B for output
-		ldi mpr, $FF
-		out DDRB, mpr		; Set Port B as Output
+		; Initialize Port D for input
 		ldi mpr, $00
-		out PORTB, mpr		; Default Output set 0
-
-	; Initialize Port D for input
-		ldi mpr, $00
-		out DDRD, mpr		; Set Port D as Input
-		ldi mpr, $F3
-		out PORTD, mpr		; Set Input to Hi-Z
+		out DDRD, mpr			; Set Port D as Input
+		ldi mpr, $03
+		out PORTD, mpr			; Set Input to Hi-Z
 		out PIND, mpr
 	
-		; Initialize LCD Display
-		rcall LCDInit			; An RCALL statement		
-
-		; Init variable registers
-		ldi ZL, LOW(STRING_BEG << 1)
-		ldi ZH, HIGH(STRING_BEG << 1)
-		ldi YL, LOW(LCDLn1Addr)
-		ldi YH, High(LCDLn1Addr)
-
-		
-		;Set read count register to be the max LCD size
-		ldi ReadCnt, LCDMaxCnt
-
-
 		;USART1
-		;Enable transmitter
+		; Enable transmitter
 		ldi mpr, (1<<TXEN1)
 		sts UCSR1B, mpr
 
-		;Set frame format: 8data, 2 stop bit
+		; Set frame format: 8data, 2 stop bit
 		ldi mpr, (1<<USBS1)|(3<<UCSZ10)
 		sts UCSR1C,mpr
 
-		;Set baudrate at 2400bps
+		; Set baudrate at 2400bps
 		ldi mpr, $01
 		sts UBRR1H, mpr
 		ldi mpr, $A0
 		sts UBRR1L, mpr
 
-		; Move strings from Program Memory to Data Memory
-INIT_LINE1:		;Loop for first line
-		lpm		mpr, Z+			; Read Program memory
-		st		Y+, mpr			; Store into memory
-		dec		ReadCnt			; Decrement Read Counter
-		brne	INIT_LINE1		; Continue untill all data is read
-		rcall	LCDWrLn1		; WRITE LINE 1 DATA
+		;LCD 
+		; Call Display Driver
+		rcall LCDInit
 
+		; Set read count register to be the max LCD size
+		ldi ReadCnt, LCDMaxCnt
 
 		; Init variable registers
-		ldi ZL, LOW(STRING_TWO << 1)
-		ldi ZH, HIGH(STRING_TWO << 1)
+		ldi ZL, LOW(TITLE_STRING << 1)
+		ldi ZH, HIGH(TITLE_STRING<< 1)
+		ldi YL, LOW(LCDLn1Addr)
+		ldi YH, High(LCDLn1Addr)
+
+		; Move Title String from Program Memory to Data Memory
+		initLine1:		
+			lpm		mpr, Z+		; Read Program memory
+			st		Y+, mpr		; Store into memory
+			dec		ReadCnt		; Decrement Read Counter
+			brne	initLine1	; Continue untill all data is read
+			rcall	LCDWrLn1	; WRITE LINE 1 DATA
+
+
+		; Set read count register to be the max LCD size
+		ldi ReadCnt, LCDMaxCnt
+
+		; Init variable registers
+		ldi ZL, LOW(SEARCH_STRING << 1)
+		ldi ZH, HIGH(SEARCH_STRING << 1)
 		ldi YL, LOW(LCDLn2Addr)
 		ldi YH, High(LCDLn2Addr)
 
-		
-		;Set read count register to be the mac LCD size
-		ldi ReadCnt, LCDMaxCnt
 
-
-		; Move strings from Program Memory to Data Memory
-INIT_LINE2:			;Loop for second line
-		lpm		mpr, Z+			; Read Program memory
-		st		Y+, mpr			; Store into memory
-		dec		ReadCnt			; Decrement Read Counter
-		brne	INIT_LINE2		; Continue untill all data is read
-		rcall	LCDWrLn2		; WRITE LINE 2 DATA
+		; Move Search String from Program Memory to Data Memory
+		initLine2:		
+			lpm		mpr, Z+		; Read Program memory
+			st		Y+, mpr		; Store into memory
+			dec		ReadCnt		; Decrement Read Counter
+			brne	initLine2	; Continue untill all data is read
+			rcall	LCDWrLn2	; WRITE LINE 2 DATA
 
 
 ;***********************************************************
 ;*	Functions and Subroutines
 ;***********************************************************
 MAIN:
-		rcall StartGame
+		rcall GAME
 
-;		rcall TransJoin
+;		rcall SENDJOIN
 ;MAIN2:		
 ;		lds mpr, UCR1A
 ;		sbrs mpr, RXC1
@@ -150,10 +151,11 @@ MAIN:
 ;		andi sigrm $F0
 ;		andi idreg, $0F
 ;
-;		cpi sigr, Start
-;		breq StartGame
-;
+;		cpse sigr, Start
 ;		rjmp MAIN2
+;
+;		rcall SETUP
+;		rjmp MAIN
 
 
 ;***********************************************************
@@ -161,26 +163,35 @@ MAIN:
 ; Desc: Sends the join game signal out of it's IR
 ; 		
 ;***********************************************************
-TransJoin:
+INCREMENTRANDOM:
+
+		ret
+
+;***********************************************************
+; Func: TransJoin
+; Desc: Sends the join game signal out of it's IR
+; 		
+;***********************************************************
+SENDJOIN:
 		push mpr
 		in mpr, SREG
 		push mpr
 
-		;Enable transmitter and disable receiver
-		ldi mpr, (1<<TXEN1)|(1<<RXCIE1)
+		; Enable transmitter
+		ldi mpr, (1<<TXEN1)
 		sts UCSR1B, mpr
 
-		;Load Send Game Signal
-		ldi mpr, Join
-		sts UDR1, mpr		;Transmit Signal
+		; Load Join Game Command with BoardID
+		ldi mpr, JOIN|BOARDID
+		sts UDR1, mpr			; Transmit Signal
 
-transmitLoop:	; Wait for any transmissions to finish
-		lds mpr, UCSR1A	
-		sbrs mpr, UDRE1	
-		rjmp transmitLoop	; Loop if transmission not finished
+		transmitLoop:			; Wait for any transmissions to finish
+			lds mpr, UCSR1A	
+			sbrs mpr, UDRE1	
+			rjmp transmitLoop	; Loop if transmission not finished
 
-		;Enable reciever and disable transmitter
-		ldi mpr, (1<<RXEN1)|(1<<RXCIE1)
+		; Enable reciever
+		ldi mpr, (1<<RXEN1)
 		sts UCSR1B, mpr	
 
 		pop mpr
@@ -188,29 +199,121 @@ transmitLoop:	; Wait for any transmissions to finish
 		pop mpr
 		ret
 
+
 ;***********************************************************
 ; Func: StartGame
 ; Desc: Begins the Game
 ; 		
 ;***********************************************************
-StartGame:
+SETUP:
+		; WRITE GAME STRING
+		; Set read count register to be the max LCD size
+		ldi ReadCnt, LCDMaxCnt
+
+		; Init variable registers
+		ldi ZL, LOW(GAME_STRING << 1)
+		ldi ZH, HIGH(GAME_STRING << 1)
+		ldi YL, LOW(LCDLn2Addr)
+		ldi YH, High(LCDLn2Addr)
+
+		; Move Game String from Program Memory to Data Memory
+		writeGame:		
+			lpm		mpr, Z+		; Read Program memory
+			st		Y+, mpr		; Store into memory
+			dec		ReadCnt		; Decrement Read Counter
+			brne	writeGame	; Continue untill all data is read
+
+		; WRITE SCORE STRING
+		; Set read count register to be the max LCD size
+		ldi ReadCnt, LCDMaxCnt/2
+
+		; Init variable registers
+		ldi ZL, LOW(SCORE_STRING << 1)
+		ldi ZH, HIGH(SCORE_STRING << 1)
+		ldi YL, LOW(LCDLn1Addr)
+		ldi YH, High(LCDLn1Addr)
+
+		; Move Score String from Program Memory to Data Memory
+		beginScore:		
+			lpm		mpr, Z+		; Read Program memory
+			st		Y+, mpr		; Store into memory
+			dec		ReadCnt		; Decrement Read Counter
+			brne	beginScore	; Continue untill all data is read
 		
-		;NEED RAN VALUE
+		
 
-Loop1:
-		rcall LCDWrite
+		rcall GAME
 
-		in		mpr, PIND			;Get whisker (button) input from Port D 
-		andi	mpr, (1<<WskrY|1<<WskrN)	
-		cpi		mpr, (1<<WskrN)		;Check for Yes Input
-		brne	NEXT				;Call Next if not Yes
-		rjmp	StartGame			;If Yes, go back to StartGame
+		ret
+;***********************************************************
+; Func: StartGame
+; Desc: Begins the Game
+; 		
+;***********************************************************
+GAME:
+		
+		mov		mpr, counter
+		andi	mpr, $1F
 
-NEXT:
-		cpi		mpr, (1<<WskrY)				;Check for No Input
-		brne	Loop1				;If not No, return to loop
-		rcall	WaitForAsk		;If no, Stop adding score and wait for server in WaitForAsk
-		rjmp	Loop1				;If no input, go back to loop
+		add		scorereg, mpr
+		
+		mov		mpr, scorereg	; MOVE DATA TO MPR FOR THE B2A CALL
+								; SET THE INITIAL X-PTR ADDRESS
+		ldi		XL, low(ScoreAddr)
+		ldi		XH, high(ScoreAddr)
+		rcall	Bin2ASCII		; CALL BIN2ASCII TO CONVERT DATA
+								; NOTE, COUNT REG HOLDS HOW MANY CHARS WRITTEN
+		
+		; Write data to LCD display
+		ldi		ReadCnt, 2		; always write two chars to overide existing data in LCD
+		ldi		line, 1			; SET LINE TO 1 TO WRITE TO LINE 1
+		ldi		count, 9		; SET COUNT TO 10 TO START WRITTING TO THE TENTH INDEX
+		writeScore:
+			ld		mpr, X+		; LOAD MPR WITH DATA TO WRITE
+			rcall	LCDWriteByte; CALL LCDWRITEBYTE TO WRITE DATA TO LCD DISPLAY
+			inc		count		; INCREMENT COUNT TO WRITE TO NEXT LCD INDEX
+			dec		ReadCnt		; decrement read counter
+			brne	writeScore	; Countinue until all data is written
+
+		; Poll Player Input
+		hitLoop:
+			rcall LCDWrite		; Shows Score and Asks if player wants to 'Draw Again?'
+			
+			; Get whisker (button) input from Port D 
+			in		mpr, PIND	
+			; Mask Out All but Hit and Stay Buttons
+			andi	mpr, (1<<WskrY|1<<WskrN)				
+
+			; Check if 'Hit' was Pressed
+			cpi		mpr, (1<<WskrY)	
+			breq	GAME		; If so, get another random value
+			
+			; Check if 'Stay' was Pressed
+			cpi		mpr, (1<<WskrN)
+			brne	hitLoop		; If not, return to loop
+			
+		; DISPLAY WAITING STRING
+		; Set read count register to be the max LCD size
+		ldi ReadCnt, LCDMaxCnt
+
+		; Init variable registers
+		ldi ZL, LOW(WAIT_STRING << 1)
+		ldi ZH, HIGH(WAIT_STRING << 1)
+		ldi YL, LOW(LCDLn2Addr)
+		ldi YH, High(LCDLn2Addr)
+
+		; Move Wait String from Program Memory to Data Memory
+		writeWait:			
+		lpm		mpr, Z+		; Read Program memory
+		st		Y+, mpr		; Store into Data Memory
+		dec		ReadCnt		; Decrement Read Counter
+		brne	writeWait	; Continue untill all data is read
+		rcall	LCDWrLn2	; WRITE LINE 2 DATA
+			
+		; Wait to be asked for score
+		rcall	WAITFORASK
+		
+		ret
 
 
 ;***********************************************************
@@ -218,25 +321,57 @@ NEXT:
 ; Desc: Waits for The Server's Signal
 ; 		
 ;***********************************************************
-WaitForAsk:
+WAITFORASK:
+		
+		; Enable reciever
+		ldi mpr, (1<<RXEN1)
+		sts UCSR1B, mpr
 
-		lds mpr, UCSR1A
-		sbrs mpr, RXC1		; Check if Recieve Complete
-		rjmp WaitForAsk		; If not, wait for Recieve Complete
+		rcvLoop:
+			lds mpr, UCSR1A
+			sbrs mpr, RXC1		; Check if Recieve Complete
+			rjmp rcvLoop		; If not, wait for Recieve Complete
 
 		;If complete, get signal and check if it is Ask w/ correct BotID
-		lds sigr, UDR1 	; Get signal from buffer
-		ldi mpr, (BotID)|(Ask)
+		lds sigr, UDR1 			; Get signal from buffer
+		ldi mpr, (BOARDID)|(ASK)
 		CPSE sigr, mpr
-		rjmp WaitForAsk		;If not equal, loop around
+		rjmp WAITFORASK			;If not equal, loop around
+		
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; TRANSMIT VALUE AND CALL WAITWINNER
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		scoreLoop:
+			; Enable Transmitter
+			ldi mpr, (1<<TXEN1)
+			sts UCSR1B, mpr			
 
-		;?????????????????
-		rcall WaitForWinner
+			sts UDR1, scorereg	; Send Score
+			
+			; Load Timeout Value to Timer Register
+			ldi timer, TIMEOUT
+		
+			; Enable Reciever
+			ldi mpr, (1<<RXEN1)
+			sts UCSR1B, mpr
 
+			checkRcvd:
+				dec timer		; Decrement the Timer
+				breq scoreLoop	; If 0, Resend Start Game Command
+				lds mpr, UCSR1A	; Otherwise, check if Recieve Complete
+				sbrs mpr, RXC1
+				rjmp checkRcvd	; If not, loop for Recieve Complete
+
+				lds sigr, UDR1	; Load Recieved Signal into Signal Register
+				
+				ldi mpr, BOARDID; Move Our ID to MPR
+				ori mpr, RECIEVE; OR with Recieve Command to get Expected Signal
+
+				cp sigr, mpr	; Compare Recieved vs Expected Signal
+				brne checkRcvd	; If not equal, wait for new Recieve Complete
+
+		; Once Score is Recieved, Call WAITFORWINNER
+		rcall WAITFORWINNER
+
+		ret
 
 
 ;***********************************************************
@@ -245,46 +380,105 @@ WaitForAsk:
 ; 		
 ;***********************************************************
 
-WaitForWinner:
+WAITFORWINNER:
+		
+		; Enable Reciever
+		ldi mpr, (1<<RXEN1)
+		sts UCSR1B, mpr
+		
+		rcvLoop2:
+			lds mpr, UCSR1A
+			sbrs mpr, RXC1		; Check if Recieve Complete
+			rjmp rcvLoop2		; If not, wait for Recieve Complete
 
-		lds mpr, UCSR1A
-		sbrs mpr, RXC1			; Check if Recieve Complete
-		rjmp WaitForWinner		; If not, wait for Recieve Complete
+		lds sigr, UDR1 			; Get signal from buffer
+		ldi mpr, (BOARDID)|(WINNER)
+		cp mpr, sigr			; Check if We Won
+		breq WIN				; If So, Branch to Win
 
-		lds sigr, UDR1 	; Get signal from buffer
-		ldi mpr, (BotID)|(Winner)
-		breq WIN
-		rjmp Check		;If not equal, loop around
+		mov mpr, sigr
+		andi mpr, $F0			; Mask out ID
+		cpi	mpr, WINNER			; Compare against Win Command
+		breq LOSE				; If Equal, We Lost
+		rjmp WAITFORWINNER		; If not, Loop for Winner COmmand
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;		PROJECT WINNER
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-WIN:
+	WIN:
+		; Set read count register to be the max LCD size
+		ldi ReadCnt, LCDMaxCnt
+		
+		; Init variable registers
+		ldi ZL, LOW(WIN_STRING << 1)
+		ldi ZH, HIGH(WIN_STRING << 1)
+		ldi YL, LOW(LCDLn2Addr)
+		ldi YH, High(LCDLn2Addr)
 
-
-Check:
-		andi sigr, $F0
-		cpi	sigr, Winner
-		breq Loser
-		rjmp WaitForWinner
-
+		; Move string1 from Program Memory to Data Memory
+		WriteWinner:		; Loop for Writing Winner
+			lpm		mpr, Z+		; Read Program memory
+			st		Y+, mpr		; Store into memory
+			dec		ReadCnt		; Decrement Read Counter
+			brne	WriteWinner	; Continue until all data is read
+			rcall	LCDWrLn2	; WRITE LINE 2 DATA
+		
+		ret
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;		PROJECT LOSER
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;		
-Loser:
-;?????????????????????
+	LOSE:
+		; Set read count register to be the max LCD size
+		ldi ReadCnt, LCDMaxCnt
+		
+		; Init variable registers
+		ldi ZL, LOW(LOSE_STRING << 1)
+		ldi ZH, HIGH(LOSE_STRING << 1)
+		ldi YL, LOW(LCDLn2Addr)
+		ldi YH, High(LCDLn2Addr)
+
+		; Move string1 from Program Memory to Data Memory
+		WriteLoser:		; Loop for Writing Loser
+			lpm		mpr, Z+		; Read Program memory
+			st		Y+, mpr		; Store into memory
+			dec		ReadCnt		; Decrement Read Counter
+			brne	WriteLoser	; Continue until all data is read
+			rcall	LCDWrLn2	; WRITE LINE 2 DATA
+		
+		ret
 
 
 ;***********************************************************
 ;*	Stored Program Data
 ;***********************************************************
 
-STRING_BEG:
-.DB		"      HIT?      "
-STRING_END:
+TITLE_STRING:
+.DB		"OSU-AVRBLACKJACK"
+TITLE_STRING_END:
 
-STRING_TWO:
-.DB		"      TEST      "
-STRING_TWOB:
+SEARCH_STRING:
+.DB		" FINDING GAME.. "
+SEARCH_STRING_END:
+
+SCORE_STRING:
+.DB		" SCORE: "
+SCORE_STRING_END:
+
+GAME_STRING:
+.DB		"0 = HIT|1 = STAY"
+GAME_STRING_END:
+
+WAIT_STRING:
+.DB		"   WAITING...   "
+WAIT_STRING_END:
+
+WIN_STRING:
+.DB		"  YOU WON! :)   "
+WIN_STRING_END:
+
+LOSE_STRING:
+.DB		"  YOU LOST! :(  "
+LOSE_STRING_END:
 
 ;***********************************************************
 ;*	Additional Program Includes
