@@ -235,6 +235,10 @@ FINDWINNER:
 		winnerLoop:
 			ld idreg, -X		; Load ID Register Matching Score into ID Register
 			ld mpr, -Y			; Load Score into MPR
+
+			cpi mpr, 71			; Compare with 71
+			brge keep			; If greater than or equal to 71, keep what is in SIGR
+
 			cp mpr, sigr		; Compare Score with Previous Best Score
 			brlt keep			; If MPR < SIGR, keep what is in SIGR
 			
@@ -244,7 +248,7 @@ FINDWINNER:
 			keep:
 
 			; Check if All Scores Checked
-			cpi idreg, low(PLAYERS<<1)
+			cpi XL, low(PLAYERS<<1)
 			brne winnerLoop		; If not, Loop to check next score
 			
 		rcall SENDWINNER		; Otherwise, Send the Winner Command
@@ -269,11 +273,11 @@ SENDWINNER:
 .dseg
 
 PLAYERS:
-.byte NUM_PLAYERS
+.byte NUM_PLAYERS/2
 END_PLAYERS:
 
 SCORES:
-.byte NUM_PLAYERS
+.byte NUM_PLAYERS/2
 END_SCORES:
 
 ;***********************************************************
