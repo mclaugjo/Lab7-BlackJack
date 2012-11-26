@@ -37,9 +37,9 @@
 .def 	ReadCnt = r24
 .def	timer	= r25
 
-.equ	BOARDID	= 0b00000001	; Unique Board ID = $01 (MSB = 0) 
+.equ	BOARDID	= 0b00000110	; Unique Board ID = $01 (MSB = 0) 
 
-.equ	TIMEOUT = 100			; Timeout Interval
+.equ	TIMEOUT = 255			; Timeout Interval
 
 .equ	ScoreAddr = $0130		; Address of ASCII counter text
 
@@ -79,7 +79,7 @@ INIT:
 	
 		;USART1
 		; Enable reciever
-		ldi mpr, (1<<RXEN1)
+		ldi mpr, (1<<RXEN1)|(1<<TXEN1)
 		sts UCSR1B, mpr
 
 		; Set frame format: 8data, 2 stop bit
@@ -131,6 +131,12 @@ INIT:
 			dec		ReadCnt		; Decrement Read Counter
 			brne	initLine2	; Continue untill all data is read
 			rcall	LCDWrLn2	; WRITE LINE 2 DATA
+		
+		; Initialize Port B for output
+		ldi mpr, $FF
+		out DDRB, mpr		; Set Port B as Output
+		ldi mpr, $00
+		out PORTB, mpr		; Default Output set 0 
 
 		; BUTTONS		
 		; Initialize Port D for input
@@ -155,17 +161,17 @@ MAIN:
 		;rcall SETUP			; FOR TESTING GAME
 
 		; Loop for Recieve Complete
-		lds mpr, UCSR1A
-		sbrs mpr, RXC1			
-		rjmp MAIN				; Loop Until Recieve Complete
+	;	lds mpr, UCSR1A
+	;	sbrs mpr, RXC1			
+	;	rjmp MAIN				; Loop Until Recieve Complete
 
 		; Load Recieved Signal into Signal Register
-		lds sigr, UDR1
+	;	lds sigr, UDR1
 		
-		ldi mpr, NEW
+	;	ldi mpr, NEW
 		; Compare Signal with New Game Signal
-		cp sigr, mpr
-		brne MAIN				; If Not New Game Signal, return to Recieve Loop	
+	;	cp sigr, mpr
+	;	brne MAIN				; If Not New Game Signal, return to Recieve Loop	
 
 		rcall SENDJOIN			; If it is, send Join Command
 
@@ -183,19 +189,28 @@ SENDJOIN:
 		push mpr
 				
 		; Enable transmitter
-		ldi mpr, (1<<TXEN1)
-		sts UCSR1B, mpr
+		;ldi mpr, (1<<TXEN1)
+		;sts UCSR1B, mpr
 
 		; Load Join Game Command with BoardID
 		ldi mpr, JOIN|BOARDID
 		sts UDR1, mpr			; Transmit Signal
 		
+		out PORTB, mpr		
+		call WAITFUNC		
+
+		; Wait for Transmission to Complete
+		finishJoin:
+			lds mpr, UCSR1A	
+			sbrs mpr, UDRE1	
+			rjmp finishJoin		; Loop if transmission not finished
+		
 		; Load Timeout Value to Timer Register
 		ldi timer, TIMEOUT
 	
 		; Enable Reciever
-		ldi mpr, (1<<RXEN1)
-		sts UCSR1B, mpr
+		;ldi mpr, (1<<RXEN1)
+		;sts UCSR1B, mpr
 
 		checkRcvdJoin:
 			dec timer			; Decrement the Timer
@@ -205,12 +220,18 @@ SENDJOIN:
 			rjmp checkRcvdJoin	; If not, loop for Recieve Complete
 
 			lds sigr, UDR1		; Load Recieved Signal into Signal Register
-			
+
 			ldi mpr, BOARDID	; Move Our ID to MPR
 			ori mpr, RECIEVE	; OR with Recieve Command to get Expected Signal
 
+	;		out PORTB, mpr		
+	;		rcall WAITFUNC			
+
 			cp sigr, mpr		; Compare Recieved vs Expected Signal
 			brne checkRcvdJoin	; If not equal, wait for new Recieve Complete
+
+			out PORTB, sigr		
+			rcall WAITFUNC
 
 		rcall WAITFORSTART
 		
@@ -236,14 +257,15 @@ WAITFORSTART:
 		ldi ZH, HIGH(WAIT_STRING << 1)
 		ldi YL, LOW(LCDLn2Addr)
 		ldi YH, High(LCDLn2Addr)
-
+		
+	
 		; Move Game String from Program Memory to Data Memory
 		writeWaitStart:		
 			lpm		mpr, Z+		; Read Program memory
 			st		Y+, mpr		; Store into memory
 			dec		ReadCnt		; Decrement Read Counter
 			brne	writeWaitStart; Continue untill all data is read		
-
+			rcall	LCDWrLn2	; WRITE LINE 2 DATA
 
 		; Check for Recieved
 		lds mpr, UCSR1A
@@ -263,8 +285,8 @@ WAITFORSTART:
 		; If is Expected Signal, Send Recieved Command
 			
 		; Enable transmitter
-		ldi mpr, (1<<TXEN1)
-		sts UCSR1B, mpr
+	;	ldi mpr, (1<<TXEN1)
+	;	sts UCSR1B, mpr
 
 		; Load Recieved Command and BoardID into MPR
 		ldi mpr, RECIEVE|BOARDID
@@ -357,7 +379,6 @@ GAME:
 		cpi scorereg, 71
 		brge bust
 
-
 		rcall WAITFUNC
 		
 		; Poll Player Input
@@ -389,10 +410,10 @@ GAME:
 		ldi YL, LOW(LCDLn2Addr)
 		ldi YH, High(LCDLn2Addr)
 
-		rjmp writeWait
+		rjmp writeString
 
 		bust:
-		; DISPLAY WAITING STRING
+		; DISPLAY LOSE STRING
 		; Set read count register to be the max LCD size
 		ldi ReadCnt, LCDMaxCnt
 
@@ -404,11 +425,11 @@ GAME:
 
 
 		; Move Wait String from Program Memory to Data Memory
-		writeWait:			
+		writeString:			
 		lpm		mpr, Z+		; Read Program memory
 		st		Y+, mpr		; Store into Data Memory
 		dec		ReadCnt		; Decrement Read Counter
-		brne	writeWait	; Continue untill all data is read
+		brne	writeString	; Continue untill all data is read
 		rcall	LCDWrLn2	; WRITE LINE 2 DATA
 			
 		; Wait to be asked for score
@@ -425,8 +446,8 @@ GAME:
 WAITFORASK:
 		
 		; Enable reciever
-		ldi mpr, (1<<RXEN1)
-		sts UCSR1B, mpr
+	;	ldi mpr, (1<<RXEN1)
+	;	sts UCSR1B, mpr
 
 		rcvLoop:
 			lds mpr, UCSR1A
@@ -439,20 +460,25 @@ WAITFORASK:
 		CPSE sigr, mpr
 		rjmp WAITFORASK			;If not equal, loop around
 		
+	;	out PORTB, sigr
+	;	call WAITFUNC		
 
 		scoreLoop:
 			; Enable Transmitter
-			ldi mpr, (1<<TXEN1)
-			sts UCSR1B, mpr			
+	;		ldi mpr, (1<<TXEN1)
+	;		sts UCSR1B, mpr			
 
 			sts UDR1, scorereg	; Send Score
 			
+			out PORTB, scorereg
+			call WAITFUNC
+
 			; Load Timeout Value to Timer Register
 			ldi timer, TIMEOUT
 		
 			; Enable Reciever
-			ldi mpr, (1<<RXEN1)
-			sts UCSR1B, mpr
+	;		ldi mpr, (1<<RXEN1)
+	;		sts UCSR1B, mpr
 
 			checkRcvd:
 				dec timer		; Decrement the Timer
