@@ -186,16 +186,13 @@ STARTGAME:
 		ld idreg, -X			; Pre-Decrement X to return to last ID 
 
 		startLoop:
-			; Enable Transmitter
-	;		ldi mpr, (1<<TXEN1)
-	;		sts UCSR1B, mpr			
-
 			mov mpr, idreg		; Move PlayerID into MPR
 			ori mpr, START 		; OR with Start Game Command
 			sts UDR1, mpr		; Send Command
 
 	;		out PORTB, mpr
-	;		call WAITFUNC
+	
+			call WAITFUNC
 			
 			; Wait for Transmission to Complete
 			finishStart:
@@ -206,10 +203,6 @@ STARTGAME:
 			; Load Timeout Value to Timer Register
 			ldi timer, TIMEOUT
 		
-			; Enable Reciever
-	;		ldi mpr, (1<<RXEN1)
-	;		sts UCSR1B, mpr
-
 			checkRcvd:
 				dec timer		; Decrement the Timer
 				breq startLoop	; If 0, Resend Start Game Command
@@ -225,8 +218,8 @@ STARTGAME:
 				cp sigr, mpr	; Compare Recieved vs Expected Signal
 				brne checkRcvd	; If not equal, wait for new Recieve Complete
 				
-			out PORTB, sigr
-			call WAITFUNC
+	;		out PORTB, sigr
+	;		call WAITFUNC
 
 			; Check if Sent to All Players
 			cpi XL, low(PLAYERS<<1)
@@ -246,10 +239,6 @@ ASKSCORES:
 		ld idreg, X+			; Load First ID them Increment X
 
 		scoreLoop:
-			; Enable Transmitter
-	;		ldi mpr, (1<<TXEN1)
-	;		sts UCSR1B, mpr			
-
 			; Load Command to be Sent
 			mov mpr, idreg		; Move Player ID into MPR
 			ori mpr, ASK		; OR with Ask Score Command
@@ -260,10 +249,6 @@ ASKSCORES:
 
 			; Load Timeout Value to TImer Register
 			ldi timer, TIMEOUT
-		
-			; Enable Reciever
-	;		ldi mpr, (1<<RXEN1)
-	;		sts UCSR1B, mpr
 
 			checkScore:
 				dec timer		; Decrement the Timer
@@ -283,9 +268,9 @@ ASKSCORES:
 			st Y+, sigr			; If so, Store Score in Score Array
 			
 			; Send Recieved Score Command
-			mov mpr, idreg
-			ori mpr, RECIEVE
-			sts UDR1, mpr			
+		;	mov mpr, idreg
+		;	ori mpr, RECIEVE
+		;	sts UDR1, mpr			
 
 			; Check if Recieved All Scores
 			cpi YL, low(END_SCORES<<1)
@@ -301,6 +286,10 @@ ASKSCORES:
 
 
 FINDWINNER:
+		; FOR DEBUGGING
+		ldi mpr, $FF
+		out PORTB, mpr
+
 		ldi sigr, 0				; Start with Best Score of 0
 		ldi winreg, 0			; Start with no Winner
 
@@ -308,8 +297,8 @@ FINDWINNER:
 			ld idreg, -X		; Load ID Register Matching Score into ID Register
 			ld mpr, -Y			; Load Score into MPR
 
-			cpi mpr, 71			; Compare with 71
-			brge keep			; If greater than or equal to 71, keep what is in SIGR
+		;	cpi mpr, 71			; Compare with 71
+		;	brge keep			; If greater than or equal to 71, keep what is in SIGR
 
 			cp mpr, sigr		; Compare Score with Previous Best Score
 			brlt keep			; If MPR < SIGR, keep what is in SIGR
@@ -327,11 +316,7 @@ FINDWINNER:
 
 		ret
 
-SENDWINNER:
-		; Enable Transmitter
-		ldi mpr, (1<<TXEN1)
-		sts UCSR1B, mpr			
-	
+SENDWINNER:	
 		; Create and Send Winner Command
 		mov mpr, winreg			; Load Winner ID into MPR
 		ori mpr, WINNER			; OR with Winner Command

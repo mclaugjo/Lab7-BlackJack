@@ -37,7 +37,7 @@
 .def 	ReadCnt = r24
 .def	timer	= r25
 
-.equ	BOARDID	= 0b00000110	; Unique Board ID = $01 (MSB = 0) 
+.equ	BOARDID	= 0b00000110	; Unique Board ID = $01 (MSB = 0) ;
 
 .equ	TIMEOUT = 255			; Timeout Interval
 
@@ -188,15 +188,14 @@ SENDJOIN:
 		in mpr, SREG
 		push mpr
 				
-		; Enable transmitter
-		;ldi mpr, (1<<TXEN1)
-		;sts UCSR1B, mpr
-
 		; Load Join Game Command with BoardID
 		ldi mpr, JOIN|BOARDID
 		sts UDR1, mpr			; Transmit Signal
 		
+		; FOR DEBUG 
 		out PORTB, mpr		
+		
+		; Wait Half Second
 		call WAITFUNC		
 
 		; Wait for Transmission to Complete
@@ -207,10 +206,7 @@ SENDJOIN:
 		
 		; Load Timeout Value to Timer Register
 		ldi timer, TIMEOUT
-	
-		; Enable Reciever
-		;ldi mpr, (1<<RXEN1)
-		;sts UCSR1B, mpr
+
 
 		checkRcvdJoin:
 			dec timer			; Decrement the Timer
@@ -283,14 +279,9 @@ WAITFORSTART:
 		rjmp WAITFORSTART
 
 		; If is Expected Signal, Send Recieved Command
-			
-		; Enable transmitter
-	;	ldi mpr, (1<<TXEN1)
-	;	sts UCSR1B, mpr
-
 		; Load Recieved Command and BoardID into MPR
 		ldi mpr, RECIEVE|BOARDID
-		sts UDR1, mpr
+		sts UDR1, mpr			; Send Command
 		
 		; Start Game
 		rcall SETUP
@@ -444,11 +435,6 @@ GAME:
 ; 		
 ;***********************************************************
 WAITFORASK:
-		
-		; Enable reciever
-	;	ldi mpr, (1<<RXEN1)
-	;	sts UCSR1B, mpr
-
 		rcvLoop:
 			lds mpr, UCSR1A
 			sbrs mpr, RXC1		; Check if Recieve Complete
@@ -464,36 +450,31 @@ WAITFORASK:
 	;	call WAITFUNC		
 
 		scoreLoop:
-			; Enable Transmitter
-	;		ldi mpr, (1<<TXEN1)
-	;		sts UCSR1B, mpr			
-
 			sts UDR1, scorereg	; Send Score
 			
+			; FOR DEBUGGING
 			out PORTB, scorereg
+
+			; Wait Half Second After Score Sent
 			call WAITFUNC
 
 			; Load Timeout Value to Timer Register
 			ldi timer, TIMEOUT
-		
-			; Enable Reciever
-	;		ldi mpr, (1<<RXEN1)
-	;		sts UCSR1B, mpr
 
-			checkRcvd:
-				dec timer		; Decrement the Timer
-				breq scoreLoop	; If 0, Resend Start Game Command
-				lds mpr, UCSR1A	; Otherwise, check if Recieve Complete
-				sbrs mpr, RXC1
-				rjmp checkRcvd	; If not, loop for Recieve Complete
+	;		checkRcvd:
+	;			dec timer		; Decrement the Timer
+	;			breq scoreLoop	; If 0, Resend Start Game Command
+	;			lds mpr, UCSR1A	; Otherwise, check if Recieve Complete
+	;			sbrs mpr, RXC1
+	;			rjmp checkRcvd	; If not, loop for Recieve Complete
 
-				lds sigr, UDR1	; Load Recieved Signal into Signal Register
+	;			lds sigr, UDR1	; Load Recieved Signal into Signal Register
 				
-				ldi mpr, BOARDID; Move Our ID to MPR
-				ori mpr, RECIEVE; OR with Recieve Command to get Expected Signal
+	;			ldi mpr, BOARDID; Move Our ID to MPR
+	;			ori mpr, RECIEVE; OR with Recieve Command to get Expected Signal
 
-				cp sigr, mpr	; Compare Recieved vs Expected Signal
-				brne checkRcvd	; If not equal, wait for new Recieve Complete
+	;			cp sigr, mpr	; Compare Recieved vs Expected Signal
+	;			brne checkRcvd	; If not equal, wait for new Recieve Complete
 
 		; Once Score is Recieved, Call WAITFORWINNER
 		rcall WAITFORWINNER
@@ -508,10 +489,9 @@ WAITFORASK:
 ;***********************************************************
 
 WAITFORWINNER:
-		
-		; Enable Reciever
-		ldi mpr, (1<<RXEN1)
-		sts UCSR1B, mpr
+		; FOR DEBUGGING
+		ldi mpr, $FF
+		sts PORTB, mpr
 		
 		rcvLoop2:
 			lds mpr, UCSR1A
