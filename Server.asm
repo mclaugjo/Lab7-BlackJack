@@ -298,7 +298,9 @@ SCORES:
 .byte NUM_PLAYERS/2
 END_SCORES:
 
+.cseg
 ;***********************************************************
 ;*	Additional Program Includes
 ;***********************************************************
+.include "LCDDriver.asm"		; Include the LCD Driver
 

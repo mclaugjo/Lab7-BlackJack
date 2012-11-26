@@ -29,6 +29,10 @@
 .def	sigr 	= r15
 .def	mpr 	= r16
 
+.def	waitcnt = r17				; Wait Loop Counter
+.def	ilcnt = r18				; Inner Loop Counter
+.def	olcnt = r19				; Outer Loop Counter
+
 .def 	scorereg= r23
 .def 	ReadCnt = r24
 .def	timer	= r25
@@ -134,7 +138,8 @@ INIT:
 		out DDRD, mpr			; Set Port D as Input
 		ldi mpr, $03
 		out PORTD, mpr			; Set Input to Hi-Z
-		
+		out PIND, mpr		
+
 		; RANDOM NUM GENERATOR
 		ldi	mpr, (1<<WGM01)|(1<<CS00)
 		out	TCCR0, mpr			; Set timer prescalar to 0 and Clear Timer on Compare Match Mode
@@ -147,7 +152,7 @@ INIT:
 ;*	Functions and Subroutines
 ;***********************************************************
 MAIN:
-		;rcall SETUP
+		;rcall SETUP			; FOR TESTING GAME
 
 		; Loop for Recieve Complete
 		lds mpr, UCSR1A
@@ -222,7 +227,25 @@ SENDJOIN:
 ; 		
 ;***********************************************************
 WAITFORSTART:
-		; Check fo Recieved
+		; WRITE WAIT STRING
+		; Set read count register to be the max LCD size
+		ldi ReadCnt, LCDMaxCnt
+
+		; Init variable registers
+		ldi ZL, LOW(WAIT_STRING << 1)
+		ldi ZH, HIGH(WAIT_STRING << 1)
+		ldi YL, LOW(LCDLn2Addr)
+		ldi YH, High(LCDLn2Addr)
+
+		; Move Game String from Program Memory to Data Memory
+		writeWaitStart:		
+			lpm		mpr, Z+		; Read Program memory
+			st		Y+, mpr		; Store into memory
+			dec		ReadCnt		; Decrement Read Counter
+			brne	writeWaitStart; Continue untill all data is read		
+
+
+		; Check for Recieved
 		lds mpr, UCSR1A
 		sbrs mpr, RXC1
 		rjmp WAITFORSTART 		; Loop until Recieved
@@ -320,7 +343,6 @@ GAME:
 		ldi		XH, high(ScoreAddr)
 		rcall	Bin2ASCII		; CALL BIN2ASCII TO CONVERT DATA
 								; NOTE, COUNT REG HOLDS HOW MANY CHARS WRITTEN
-		
 		; Write data to LCD display
 		ldi		ReadCnt, 2		; always write two chars to overide existing data in LCD
 		ldi		line, 1			; SET LINE TO 1 TO WRITE TO LINE 1
@@ -330,15 +352,21 @@ GAME:
 			rcall	LCDWriteByte; CALL LCDWRITEBYTE TO WRITE DATA TO LCD DISPLAY
 			inc		count		; INCREMENT COUNT TO WRITE TO NEXT LCD INDEX
 			dec		ReadCnt		; decrement read counter
-			brne	writeScore	; Countinue until all data is written
+			brne	writeScore	; Countinue until all data is written		
 
+		cpi scorereg, 71
+		brge bust
+
+
+		rcall WAITFUNC
+		
 		; Poll Player Input
 		hitLoop:			
 			; Get whisker (button) input from Port D 
 			in		mpr, PIND	
 			
-			; Flip Bits (Input Low)			
-			com 	mpr
+			; Flip Bits (Active Low)
+			com mpr
 
 			; Mask Out All but Hit and Stay Buttons
 			andi	mpr, (1<<WskrY|1<<WskrN)				
@@ -360,6 +388,20 @@ GAME:
 		ldi ZH, HIGH(WAIT_STRING << 1)
 		ldi YL, LOW(LCDLn2Addr)
 		ldi YH, High(LCDLn2Addr)
+
+		rjmp writeWait
+
+		bust:
+		; DISPLAY WAITING STRING
+		; Set read count register to be the max LCD size
+		ldi ReadCnt, LCDMaxCnt
+
+		; Init variable registers
+		ldi ZL, LOW(LOSE_STRING << 1)
+		ldi ZH, HIGH(LOSE_STRING << 1)
+		ldi YL, LOW(LCDLn2Addr)
+		ldi YH, High(LCDLn2Addr)
+
 
 		; Move Wait String from Program Memory to Data Memory
 		writeWait:			
@@ -503,6 +545,32 @@ WAITFORWINNER:
 	
 	END:
 		ret
+
+;***********************************************************
+; Func: WaitForWinner
+; Desc: Waits for The Server's Signal with the Winner
+; 		
+;***********************************************************
+WAITFUNC:
+		push	waitcnt			; Save wait register
+		push	ilcnt			; Save ilcnt register
+		push	olcnt			; Save olcnt register
+
+		ldi 	waitcnt, TIMEOUT/2
+
+Loop:	ldi		olcnt, 224		; load olcnt register
+OLoop:	ldi		ilcnt, 237		; load ilcnt register
+ILoop:	dec		ilcnt			; decrement ilcnt
+		brne	ILoop			; Continue Inner Loop
+		dec		olcnt		; decrement olcnt
+		brne	OLoop			; Continue Outer Loop
+		dec		waitcnt		; Decrement wait 
+		brne	Loop			; Continue Wait loop	
+
+		pop		olcnt		; Restore olcnt register
+		pop		ilcnt		; Restore ilcnt register
+		pop		waitcnt		; Restore wait register
+		ret				; Return from subroutine
 
 
 ;***********************************************************
