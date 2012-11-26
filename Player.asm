@@ -74,8 +74,8 @@ INIT:
 		out SPL, mpr
 	
 		;USART1
-		; Enable transmitter
-		ldi mpr, (1<<TXEN1)
+		; Enable reciever
+		ldi mpr, (1<<RXEN1)
 		sts UCSR1B, mpr
 
 		; Set frame format: 8data, 2 stop bit
@@ -137,8 +137,8 @@ INIT:
 		
 		; RANDOM NUM GENERATOR
 		ldi	mpr, (1<<WGM01)|(1<<CS00)
-		out	TCCR0, mpr		; Set timer prescalar to 0 and Clear Timer on Compare Match Mode
-		ldi	mpr, 30			; Set Max Value
+		out	TCCR0, mpr			; Set timer prescalar to 0 and Clear Timer on Compare Match Mode
+		ldi	mpr, 30				; Set Max Value
 		out	OCR0, mpr				
 
 
@@ -147,25 +147,24 @@ INIT:
 ;*	Functions and Subroutines
 ;***********************************************************
 MAIN:
-		rcall SETUP
+		;rcall SETUP
 
-;		rcall SENDJOIN
-;MAIN2:		
-;		lds mpr, UCR1A
-;		sbrs mpr, RXC1
-;		rjmp MAIN
-;
-;		lds sigr, UDR1
-;
-;		mov idreg, sigr
-;		andi sigrm $F0
-;		andi idreg, $0F
-;
-;		cpse sigr, Start
-;		rjmp MAIN2
-;
-;		rcall SETUP
-;		rjmp MAIN
+		; Loop for Recieve Complete
+		lds mpr, UCSR1A
+		sbrs mpr, RXC1			
+		rjmp MAIN				; Loop Until Recieve Complete
+
+		; Load Recieved Signal into Signal Register
+		lds sigr, UDR1
+		
+		ldi mpr, NEW
+		; Compare Signal with New Game Signal
+		cp sigr, mpr
+		brne MAIN				; If Not New Game Signal, return to Recieve Loop	
+
+		rcall SENDJOIN			; If it is, send Join Command
+
+		rjmp MAIN
 
 
 ;***********************************************************
@@ -177,7 +176,7 @@ SENDJOIN:
 		push mpr
 		in mpr, SREG
 		push mpr
-
+				
 		; Enable transmitter
 		ldi mpr, (1<<TXEN1)
 		sts UCSR1B, mpr
@@ -185,19 +184,72 @@ SENDJOIN:
 		; Load Join Game Command with BoardID
 		ldi mpr, JOIN|BOARDID
 		sts UDR1, mpr			; Transmit Signal
-
-		transmitLoop:			; Wait for any transmissions to finish
-			lds mpr, UCSR1A	
-			sbrs mpr, UDRE1	
-			rjmp transmitLoop	; Loop if transmission not finished
-
-		; Enable reciever
+		
+		; Load Timeout Value to Timer Register
+		ldi timer, TIMEOUT
+	
+		; Enable Reciever
 		ldi mpr, (1<<RXEN1)
-		sts UCSR1B, mpr	
+		sts UCSR1B, mpr
 
+		checkRcvdJoin:
+			dec timer			; Decrement the Timer
+			breq restart		; If 0, Wait for another New Game Signal
+			lds mpr, UCSR1A		; Otherwise, check if Recieve Complete
+			sbrs mpr, RXC1
+			rjmp checkRcvdJoin	; If not, loop for Recieve Complete
+
+			lds sigr, UDR1		; Load Recieved Signal into Signal Register
+			
+			ldi mpr, BOARDID	; Move Our ID to MPR
+			ori mpr, RECIEVE	; OR with Recieve Command to get Expected Signal
+
+			cp sigr, mpr		; Compare Recieved vs Expected Signal
+			brne checkRcvdJoin	; If not equal, wait for new Recieve Complete
+
+		rcall WAITFORSTART
+		
+	restart:
 		pop mpr
 		out SREG, mpr
 		pop mpr
+		ret
+
+
+;***********************************************************
+; Func: StartGame
+; Desc: Begins the Game
+; 		
+;***********************************************************
+WAITFORSTART:
+		; Check fo Recieved
+		lds mpr, UCSR1A
+		sbrs mpr, RXC1
+		rjmp WAITFORSTART 		; Loop until Recieved
+
+		; Load Recieved Signal into SIGR
+		lds sigr, UDR1	
+		
+		; Load Expected Signal into SIGR
+		ldi mpr, START|BOARDID
+
+		; If not Expected Signal Jump to Recieve Loop
+		cpse sigr, mpr
+		rjmp WAITFORSTART
+
+		; If is Expected Signal, Send Recieved Command
+			
+		; Enable transmitter
+		ldi mpr, (1<<TXEN1)
+		sts UCSR1B, mpr
+
+		; Load Recieved Command and BoardID into MPR
+		ldi mpr, RECIEVE|BOARDID
+		sts UDR1, mpr
+		
+		; Start Game
+		rcall SETUP
+
 		ret
 
 
@@ -257,10 +309,10 @@ SETUP:
 GAME:
 		
 		in		mpr, TCNT0		; Grab Random Value from counter register
-		andi	mpr, $1F		; Mask so only 5 bits available (0 - 31)
+		andi	mpr, $1F		; Mask so only 5 bits available (0 - 30)
 		breq 	GAME			; If mpr == 0, get new value
 
-		add		scorereg, mpr	; Add Value of 1 - 31 to score register
+		add		scorereg, mpr	; Add Value of 1 - 30 to score register
 		
 		mov		mpr, scorereg	; MOVE DATA TO MPR FOR THE B2A CALL
 								; SET THE INITIAL X-PTR ADDRESS

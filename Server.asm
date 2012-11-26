@@ -27,7 +27,7 @@
 .def	winreg	= r19			; Register to Winner ID
 .def	timer 	= r20
 
-.equ	NUM_PLAYERS = 2
+.equ	NUM_PLAYERS = 1
 
 .equ	BOARDID	= 0b00000011	; Unique Board ID = $03 (MSB = 0) 
 
@@ -99,35 +99,53 @@ INIT:
 ;***********************************************************
 
 MAIN:
-		; Loop for Recieve Complete
-		lds mpr, UCSR1A
-		sbrs mpr, RXC1			; If Recieve Complete Skip rjmp below
-		rjmp MAIN
+		; Enable Transmitter
+		ldi mpr, (1<<TXEN1)
+		sts UCSR1B, mpr			
 
-		; Load Recieved Signal into Signal Register
-		lds sigr, UDR1
-
-		; Copy to ID register
-		mov idreg, sigr
-
-		andi sigr, $F0			; Mask Out ID
-		andi idreg, $0F			; Mask Out Command
-
-		cpi sigr, JOIN			; Compare Command against Join
-		breq addPlayer			; If Equal, add Player
-
-		rjmp MAIN				; Otherwise, return to beginning and wait for new signal
-
-		addPlayer:
+		ldi mpr, NEW 			; Load New Game Command
+		sts UDR1, mpr			; Send Command
 			
-			; Store ID in Player Array
-			st X+, idreg
+		; Load Timeout Value to Timer Register
+		ldi timer, TIMEOUT
+		
+		; Enable Reciever
+		ldi mpr, (1<<RXEN1)
+		sts UCSR1B, mpr
+
+		checkRcvdNew:
+			dec timer			; Decrement the Timer
+			breq MAIN			; If 0, Resend New Game Command
+		
+			; Loop for Recieve Complete
+			lds mpr, UCSR1A
+			sbrs mpr, RXC1		; If Recieve Complete Skip rjmp below
+			rjmp checkRcvdNew
+
+			; Load Recieved Signal into Signal Register
+			lds sigr, UDR1
+
+			; Copy to ID register
+			mov idreg, sigr
+
+			andi sigr, $F0		; Mask Out ID
+			andi idreg, $0F		; Mask Out Command
+
+			cpi sigr, JOIN		; Compare Command against Join
+			breq addPlayer		; If Equal, add Player
+
+			rjmp checkRcvdNew	; Otherwise, return to beginning and wait for new signal
+
+			addPlayer:
 			
-			; Check If Room for More Players
-			cpi XL, low(END_PLAYERS<<1)
-			brne MAIN			; If so, Return to Main and wait for new signal
+				; Store ID in Player Array
+				st X+, idreg
 			
-			rcall STARTGAME		; If not, call STARTGAME
+				; Check If Room for More Players
+				cpi XL, low(END_PLAYERS<<1)
+				brne CheckRcvdNew; If so, Return to Main and wait for new signal
+			
+				rcall STARTGAME	; If not, call STARTGAME
 
 		rjmp MAIN
 
