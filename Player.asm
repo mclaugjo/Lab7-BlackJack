@@ -1,9 +1,16 @@
 ;***********************************************************
 ;*
 ;* 	ECE 375 Lab 7 - Fall 2012
-;*	Remote.asm
+;*	Player.asm
 ;*
-;*	This is the remote for Lab 7 of ECE 375.
+;*	This is the BlackJack Player for Lab 7 of ECE 375. The Player
+;*  joins a game and waits for the start game signal. When it is
+;* 	told to start, it adds a random value (1 - 31) to the score and 
+;*	asks the player if they want to hit or stay. Once the player 
+;*	decides to stay, the Player waits until it is asked for its score 
+;*	and then transmits it once it is it's turn. The Player then waits 
+;*	to recieve the winner command, letting it know if it had the 
+;*	highest score.
 ;*
 ;*
 ;***********************************************************
@@ -54,10 +61,6 @@
 .org	$0000					; Beginning of IVs
 		rjmp 	INIT			; Reset interrupt
 
-.org	$001E					; Timer Overflow 0 Interrupt Vector
-		rcall INCREMENTRANDOM 	; Increment the Random Number Value
-		reti
-
 .org	$0046					; End of Interrupt Vectors
 
 ;-----------------------------------------------------------
@@ -69,13 +72,6 @@ INIT:
 		out SPH, mpr
 		ldi mpr, LOW(RAMEND)
 		out SPL, mpr
-
-		; Initialize Port D for input
-		ldi mpr, $00
-		out DDRD, mpr			; Set Port D as Input
-		ldi mpr, $03
-		out PORTD, mpr			; Set Input to Hi-Z
-		out PIND, mpr
 	
 		;USART1
 		; Enable transmitter
@@ -132,12 +128,26 @@ INIT:
 			brne	initLine2	; Continue untill all data is read
 			rcall	LCDWrLn2	; WRITE LINE 2 DATA
 
+		; BUTTONS		
+		; Initialize Port D for input
+		ldi mpr, $00
+		out DDRD, mpr			; Set Port D as Input
+		ldi mpr, $03
+		out PORTD, mpr			; Set Input to Hi-Z
+		
+		; RANDOM NUM GENERATOR
+		ldi	mpr, (1<<WGM01)|(1<<CS00)
+		out	TCCR0, mpr		; Set timer prescalar to 0 and Clear Timer on Compare Match Mode
+		ldi	mpr, 30			; Set Max Value
+		out	OCR0, mpr				
+
+
 
 ;***********************************************************
 ;*	Functions and Subroutines
 ;***********************************************************
 MAIN:
-		rcall GAME
+		rcall SETUP
 
 ;		rcall SENDJOIN
 ;MAIN2:		
@@ -157,18 +167,6 @@ MAIN:
 ;		rcall SETUP
 ;		rjmp MAIN
 
-
-;***********************************************************
-; Func: TransJoin
-; Desc: Sends the join game signal out of it's IR
-; 		
-;***********************************************************
-INCREMENTRANDOM:
-		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;		
-		; INCREMENT COUNTER REGISTER 
-		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-		ret
 
 ;***********************************************************
 ; Func: TransJoin
@@ -209,6 +207,9 @@ SENDJOIN:
 ; 		
 ;***********************************************************
 SETUP:
+		; Clear Score Register
+		clr scorereg
+		
 		; WRITE GAME STRING
 		; Set read count register to be the max LCD size
 		ldi ReadCnt, LCDMaxCnt
@@ -228,7 +229,7 @@ SETUP:
 
 		; WRITE SCORE STRING
 		; Set read count register to be the max LCD size
-		ldi ReadCnt, LCDMaxCnt/2
+		ldi ReadCnt, LCDMaxCnt
 
 		; Init variable registers
 		ldi ZL, LOW(SCORE_STRING << 1)
@@ -242,10 +243,8 @@ SETUP:
 			st		Y+, mpr		; Store into memory
 			dec		ReadCnt		; Decrement Read Counter
 			brne	beginScore	; Continue untill all data is read
-		
-		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		;SETUP TIMER OVERFLOW INTERRUPTS	
-		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		rcall LCDWrite		; Shows Score and Asks if player wants to 'Draw Again?'
 
 		rcall GAME
 
@@ -257,7 +256,7 @@ SETUP:
 ;***********************************************************
 GAME:
 		
-		mov		mpr, counter	; Grab Random Value from counter register
+		in		mpr, TCNT0		; Grab Random Value from counter register
 		andi	mpr, $1F		; Mask so only 5 bits available (0 - 31)
 		breq 	GAME			; If mpr == 0, get new value
 
@@ -282,11 +281,13 @@ GAME:
 			brne	writeScore	; Countinue until all data is written
 
 		; Poll Player Input
-		hitLoop:
-			rcall LCDWrite		; Shows Score and Asks if player wants to 'Draw Again?'
-			
+		hitLoop:			
 			; Get whisker (button) input from Port D 
 			in		mpr, PIND	
+			
+			; Flip Bits (Input Low)			
+			com 	mpr
+
 			; Mask Out All but Hit and Stay Buttons
 			andi	mpr, (1<<WskrY|1<<WskrN)				
 
@@ -315,10 +316,6 @@ GAME:
 		dec		ReadCnt		; Decrement Read Counter
 		brne	writeWait	; Continue untill all data is read
 		rcall	LCDWrLn2	; WRITE LINE 2 DATA
-
-		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;	
-		; DISABLE TIMER OVERFLOW INTERRUPTS
-		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			
 		; Wait to be asked for score
 		rcall	WAITFORASK
@@ -412,9 +409,7 @@ WAITFORWINNER:
 		breq LOSE				; If Equal, We Lost
 		rjmp WAITFORWINNER		; If not, Loop for Winner COmmand
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;		PROJECT WINNER
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+		; SHOW WINNER
 	WIN:
 		; Set read count register to be the max LCD size
 		ldi ReadCnt, LCDMaxCnt
@@ -433,10 +428,9 @@ WAITFORWINNER:
 			brne	WriteWinner	; Continue until all data is read
 			rcall	LCDWrLn2	; WRITE LINE 2 DATA
 		
-		ret
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;		PROJECT LOSER
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;		
+		rjmp END
+		
+		; SHOW LOSER	
 	LOSE:
 		; Set read count register to be the max LCD size
 		ldi ReadCnt, LCDMaxCnt
@@ -454,7 +448,8 @@ WAITFORWINNER:
 			dec		ReadCnt		; Decrement Read Counter
 			brne	WriteLoser	; Continue until all data is read
 			rcall	LCDWrLn2	; WRITE LINE 2 DATA
-		
+	
+	END:
 		ret
 
 
@@ -471,11 +466,11 @@ SEARCH_STRING:
 SEARCH_STRING_END:
 
 SCORE_STRING:
-.DB		" SCORE: "
+.DB		" SCORE:         "
 SCORE_STRING_END:
 
 GAME_STRING:
-.DB		"0 = HIT|1 = STAY"
+.DB		"1 = STAY|0 = HIT"
 GAME_STRING_END:
 
 WAIT_STRING:
