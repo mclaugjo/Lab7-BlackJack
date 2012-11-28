@@ -1,1 +1,1 @@
-<AVRWorkspace><IOSettings><CurrentRegisters/></IOSettings><part name="ATmega128"/><Files/></AVRWorkspace>
+<AVRWorkspace><IOSettings><CurrentRegisters/></IOSettings><part name="ATmega128"/><Files><File00000 Name="C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Player.asm" Position="156 97 783 838" LineCol="12 17"/><File00001 Name="C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm" Position="781 94 1465 838" LineCol="509 26"/></Files></AVRWorkspace>
