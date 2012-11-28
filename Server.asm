@@ -24,18 +24,22 @@
 .def	mpr 	= r16			; Multi-Purpose Register
 .def	sigr	= r17			; Register to Hold Signal
 .def	idreg	= r18			; Register to Hold Board ID
-.def	winreg	= r19			; Register to Winner ID
+.def	playreg	= r19			; Register to Winner ID
 .def	timer 	= r20
 
 .def	waitcnt = r21			; Wait Loop Counter
 .def	ilcnt = r22				; Inner Loop Counter
 .def	olcnt = r23				; Outer Loop Counter
 
+.def 	ReadCnt = r24
+
 .equ	NUM_PLAYERS = 2
 
 .equ	BOARDID	= 0b00000011	; Unique Board ID = $03 (MSB = 0) 
 
 .equ	TIMEOUT = 100			; Timeout Interval
+
+.equ	ScoreAddr = $0130		; Address of ASCII counter text
 
 ; Use these commands between the server and player (OR WITH 4 BIT BOT ID TO INCLUDE ID)
 ; MSB = 1 thus:
@@ -91,11 +95,58 @@ INIT:
 		ldi mpr, $A0
 		sts UBRR1L, mpr
 
+INITLCD:
+		; Call Display Driver
+		rcall LCDInit
+
+		; Set read count register to be the max LCD size
+		ldi ReadCnt, LCDMaxCnt
+
+		; Init variable registers
+		ldi ZL, LOW(TITLE_STRING << 1)
+		ldi ZH, HIGH(TITLE_STRING<< 1)
+		ldi YL, LOW(LCDLn1Addr)
+		ldi YH, High(LCDLn1Addr)
+
+		; Move Title String from Program Memory to Data Memory
+		initLine1:		
+			lpm		mpr, Z+		; Read Program memory
+			st		Y+, mpr		; Store into memory
+			dec		ReadCnt		; Decrement Read Counter
+			brne	initLine1	; Continue untill all data is read
+		
+		; WRITE LINE 1 DATA
+		rcall	LCDWrLn1	
+
+
+		; Set read count register to be the max LCD size
+		ldi ReadCnt, LCDMaxCnt
+
+		; Init variable registers
+		ldi ZL, LOW(PLAYERS_STRING << 1)
+		ldi ZH, HIGH(PLAYERS_STRING << 1)
+		ldi YL, LOW(LCDLn2Addr)
+		ldi YH, High(LCDLn2Addr)
+
+
+		; Move Search String from Program Memory to Data Memory
+		initLine2:		
+			lpm		mpr, Z+		; Read Program memory
+			st		Y+, mpr		; Store into memory
+			dec		ReadCnt		; Decrement Read Counter
+			brne	initLine2	; Continue untill all data is read
+		
+		; WRITE LINE 2 DATA
+		rcall	LCDWrLn2	
+		
+INITGAME:
 		; Load initial addresses of arrays
 		ldi XL, low(PLAYERS<<1)
 		ldi XH, high(PLAYERS<<1)
 		ldi YL, low(SCORES<<1)
 		ldi YH, high(SCORES<<1)
+
+		ldi playreg, 0
 
 ;***********************************************************
 ;*	Functions and Subroutines
@@ -171,9 +222,41 @@ MAIN:
 
 				; Store ID in Player Array
 				st X+, idreg
-			
+				
+				inc playreg
+
+				mov		mpr, playreg	; MOVE DATA TO MPR FOR THE B2A CALL
+
+				; Save X Pointer and Player Register
+				push XL
+				push XH
+				push line
+				push count
+				
+				; SET THE INITIAL X-PTR ADDRESS
+				ldi		XL, low(ScoreAddr)
+				ldi		XH, high(ScoreAddr)
+				rcall	Bin2ASCII		; CALL BIN2ASCII TO CONVERT DATA
+										; NOTE, COUNT REG HOLDS HOW MANY CHARS WRITTEN
+				; Write data to LCD display
+				ldi		ReadCnt, 1		; always write two chars to overide existing data in LCD
+				ldi		line, 2			; SET LINE TO 1 TO WRITE TO LINE 1
+				ldi		count, 12		; SET COUNT TO 10 TO START WRITTING TO THE TENTH INDEX
+				writePlayers:
+					ld		mpr, X+		; LOAD MPR WITH DATA TO WRITE
+					rcall	LCDWriteByte; CALL LCDWRITEBYTE TO WRITE DATA TO LCD DISPLAY
+					inc		count		; INCREMENT COUNT TO WRITE TO NEXT LCD INDEX
+					dec		ReadCnt		; decrement read counter
+					brne	writePlayers; Countinue until all data is written		
+
+				; Restore X Pointer and Player Register
+				pop count
+				pop line
+				pop XH
+				pop XL
+
 				; Check If Room for More Players
-				cpi XL, low(END_PLAYERS<<1)
+				cpi playreg, NUM_PLAYERS
 				brne MAIN		; If so, Return to Main and send New Game Command Again
 			
 				rcall STARTGAME	; If not, call STARTGAME
@@ -182,7 +265,34 @@ MAIN:
 
 
 STARTGAME:
+		push YL
+		push YH
+
 		
+		; CHANGE LCD
+		; Set read count register to be the max LCD size
+		ldi ReadCnt, LCDMaxCnt
+
+		; Init variable registers
+		ldi ZL, LOW(GAME_STRING << 1)
+		ldi ZH, HIGH(GAME_STRING << 1)
+		ldi YL, LOW(LCDLn2Addr)
+		ldi YH, High(LCDLn2Addr)
+		
+
+		; Move Game String from Program Memory to Data Memory
+		gameString:		
+			lpm		mpr, Z+		; Read Program memory
+			st		Y+, mpr		; Store into memory
+			dec		ReadCnt		; Decrement Read Counter
+			brne	gameString	; Continue untill all data is read
+		
+		; WRITE LINE 2 DATA
+		rcall	LCDWrLn2	
+
+		pop YH
+		pop YL
+
 		ld idreg, -X			; Pre-Decrement X to return to last ID 
 
 		startLoop:
@@ -236,6 +346,32 @@ STARTGAME:
 		ret
 
 ASKSCORES:
+		push YL
+		push YH
+
+		; CHANGE LCD
+		; Set read count register to be the max LCD size
+		ldi ReadCnt, LCDMaxCnt
+
+		; Init variable registers
+		ldi ZL, LOW(SCORE_STRING << 1)
+		ldi ZH, HIGH(SCORE_STRING << 1)
+		ldi YL, LOW(LCDLn2Addr)
+		ldi YH, High(LCDLn2Addr)
+
+		; Move Search String from Program Memory to Data Memory
+		scoresString:		
+			lpm		mpr, Z+		; Read Program memory
+			st		Y+, mpr		; Store into memory
+			dec		ReadCnt		; Decrement Read Counter
+			brne	scoresString; Continue untill all data is read
+		
+		; WRITE LINE 2 DATA
+		rcall	LCDWrLn2	
+
+		pop YH
+		pop YL
+		
 		ld idreg, X+			; Load First ID them Increment X
 
 		scoreLoop:
@@ -265,8 +401,44 @@ ASKSCORES:
 				sbrc sigr, 7	; Check if MSB is cleared (Score Value)
 				rjmp checkScore	; If not, Wait for Score
 				
-			st Y+, sigr			; If so, Store Score in Score Array
+			st Y+, sigr			; If so, Store Score in Score Array			
+
+			mov mpr, sigr		
+
+			; Save X Pointer and Player Register
+			push XL
+			push XH
+			push line
+			push count
 			
+			; SET THE INITIAL X-PTR ADDRESS
+			ldi		XL, low(ScoreAddr)
+			ldi		XH, high(ScoreAddr)
+			rcall	Bin2ASCII		; CALL BIN2ASCII TO CONVERT DATA
+									; NOTE, COUNT REG HOLDS HOW MANY CHARS WRITTEN
+			; Write data to LCD display
+			ldi		ReadCnt, 2		; always write two chars to overide existing data in LCD
+			ldi		line, 2			; SET LINE TO 1 TO WRITE TO LINE 1
+			
+			cpi 	YL, low(END_SCORES<<1)
+			in	 	mpr, SREG
+			sbrs 	mpr, SREG_Z
+			ldi 	count, 12
+
+			ldi		count, 9		; SET COUNT TO 10 TO START WRITTING TO THE TENTH INDEX
+			writeScores:
+				ld		mpr, X+		; LOAD MPR WITH DATA TO WRITE
+				rcall	LCDWriteByte; CALL LCDWRITEBYTE TO WRITE DATA TO LCD DISPLAY
+				inc		count		; INCREMENT COUNT TO WRITE TO NEXT LCD INDEX
+				dec		ReadCnt		; decrement read counter
+				brne	writeScores	; Countinue until all data is written		
+
+			; Restore X Pointer and Player Register
+			pop count
+			pop line
+			pop XH
+			pop XL
+
 			; Send Recieved Score Command
 		;	mov mpr, idreg
 		;	ori mpr, RECIEVE
@@ -286,25 +458,51 @@ ASKSCORES:
 
 
 FINDWINNER:
+		push YL
+		push YH
+
+		; CHANGE LCD
+		; Set read count register to be the max LCD size
+		ldi ReadCnt, LCDMaxCnt
+
+		; Init variable registers
+		ldi ZL, LOW(WINNER_STRING << 1)
+		ldi ZH, HIGH(WINNER_STRING << 1)
+		ldi YL, LOW(LCDLn2Addr)
+		ldi YH, High(LCDLn2Addr)
+
+		; Move Search String from Program Memory to Data Memory
+		winnerString:		
+			lpm		mpr, Z+		; Read Program memory
+			st		Y+, mpr		; Store into memory
+			dec		ReadCnt		; Decrement Read Counter
+			brne	winnerString; Continue untill all data is read
+		
+		; WRITE LINE 2 DATA
+		rcall	LCDWrLn2	
+
+		pop YH
+		pop YL
+		
 		; FOR DEBUGGING
 		ldi mpr, $FF
 		out PORTB, mpr
 
 		ldi sigr, 0				; Start with Best Score of 0
-		ldi winreg, 0			; Start with no Winner
+		ldi playreg, 0			; Start with no Winner
 
 		winnerLoop:
 			ld idreg, -X		; Load ID Register Matching Score into ID Register
 			ld mpr, -Y			; Load Score into MPR
 
-		;	cpi mpr, 71			; Compare with 71
-		;	brge keep			; If greater than or equal to 71, keep what is in SIGR
+			cpi mpr, 71			; Compare with 71
+			brge keep			; If greater than or equal to 71, keep what is in SIGR
 
 			cp mpr, sigr		; Compare Score with Previous Best Score
 			brlt keep			; If MPR < SIGR, keep what is in SIGR
 			
 			mov sigr, mpr		; Otherwise, store new highest value (MPR)
-			mov winreg, idreg	; and Store Highest Scorers ID
+			mov playreg, idreg	; and Store Highest Scorers ID
 			
 			keep:
 
@@ -318,10 +516,13 @@ FINDWINNER:
 
 SENDWINNER:	
 		; Create and Send Winner Command
-		mov mpr, winreg			; Load Winner ID into MPR
+		mov mpr, playreg		; Load Winner ID into MPR
 		ori mpr, WINNER			; OR with Winner Command
 		sts UDR1, mpr			; Send Command
 
+		out PORTB, mpr
+
+		rjmp SENDWINNER
 		ret
 
 ;***********************************************************
@@ -353,6 +554,32 @@ ILoop:	dec		ilcnt			; decrement ilcnt
 ;***********************************************************
 ;*	Stored Program Data
 ;***********************************************************
+
+TITLE_STRING:
+.DB		"OSU-AVRBLACKJACK"
+TITLE_STRING_END:
+
+PLAYERS_STRING:
+.DB		"   PLAYERS: 0   "
+PLAYERS_STRING_END:
+
+GAME_STRING:
+.DB		" STARTING GAME  "
+GAME_STRING_END:
+
+WAIT_STRING:
+.DB		" ASKING SCORES  "
+WAIT_STRING_END:
+
+SCORE_STRING:
+.DB		" SCORES: 00 00  "
+SCORE_STRING_END:
+
+WINNER_STRING:
+.DB		" FINDING WINNER "
+WINNER_STRING_END:
+
+
 .dseg
 
 PLAYERS:

@@ -20,51 +20,72 @@
   <FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Lab7-BlackJack.map</FILE>
  </OUTPUT_FILES>
  <LABELS>
-  <INIT><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>66</LINE></INIT>
-  <PLAYERS><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>358</LINE></PLAYERS>
-  <SCORES><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>362</LINE></SCORES>
-  <MAIN><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>104</LINE></MAIN>
-  <checkRcvdNew><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>127</LINE></checkRcvdNew>
-  <WAITFUNC><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>332</LINE></WAITFUNC>
-  <addPlayer><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>153</LINE></addPlayer>
-  <finishRcvJoin><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>167</LINE></finishRcvJoin>
-  <END_PLAYERS><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>360</LINE></END_PLAYERS>
-  <STARTGAME><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>184</LINE></STARTGAME>
-  <startLoop><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>188</LINE></startLoop>
-  <finishStart><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>198</LINE></finishStart>
-  <checkRcvd><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>206</LINE></checkRcvd>
-  <started><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>232</LINE></started>
-  <ASKSCORES><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>238</LINE></ASKSCORES>
-  <scoreLoop><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>241</LINE></scoreLoop>
-  <checkScore><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>253</LINE></checkScore>
-  <END_SCORES><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>364</LINE></END_SCORES>
-  <ended><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>282</LINE></ended>
-  <FINDWINNER><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>288</LINE></FINDWINNER>
-  <winnerLoop><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>296</LINE></winnerLoop>
-  <keep><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>309</LINE></keep>
-  <SENDWINNER><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>319</LINE></SENDWINNER>
-  <Loop><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>339</LINE></Loop>
-  <OLoop><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>340</LINE></OLoop>
-  <ILoop><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>341</LINE></ILoop>
+  <INIT><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>70</LINE></INIT>
+  <INITLCD><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>98</LINE></INITLCD>
   <LCDInit><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\LCDDriver.asm</FILE><LINE>75</LINE></LCDInit>
+  <TITLE_STRING><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>558</LINE></TITLE_STRING>
+  <initLine1><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>112</LINE></initLine1>
+  <LCDWrLn1><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\LCDDriver.asm</FILE><LINE>180</LINE></LCDWrLn1>
+  <PLAYERS_STRING><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>562</LINE></PLAYERS_STRING>
+  <initLine2><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>133</LINE></initLine2>
+  <LCDWrLn2><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\LCDDriver.asm</FILE><LINE>205</LINE></LCDWrLn2>
+  <INITGAME><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>142</LINE></INITGAME>
+  <PLAYERS><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>585</LINE></PLAYERS>
+  <SCORES><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>589</LINE></SCORES>
+  <MAIN><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>155</LINE></MAIN>
+  <checkRcvdNew><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>178</LINE></checkRcvdNew>
+  <WAITFUNC><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>533</LINE></WAITFUNC>
+  <addPlayer><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>204</LINE></addPlayer>
+  <finishRcvJoin><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>218</LINE></finishRcvJoin>
+  <Bin2ASCII><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\LCDDriver.asm</FILE><LINE>339</LINE></Bin2ASCII>
+  <writePlayers><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>245</LINE></writePlayers>
+  <LCDWriteByte><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\LCDDriver.asm</FILE><LINE>302</LINE></LCDWriteByte>
+  <STARTGAME><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>267</LINE></STARTGAME>
+  <GAME_STRING><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>566</LINE></GAME_STRING>
+  <gameString><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>284</LINE></gameString>
+  <startLoop><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>298</LINE></startLoop>
+  <finishStart><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>308</LINE></finishStart>
+  <checkRcvd><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>316</LINE></checkRcvd>
+  <started><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>342</LINE></started>
+  <ASKSCORES><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>348</LINE></ASKSCORES>
+  <SCORE_STRING><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>574</LINE></SCORE_STRING>
+  <scoresString><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>363</LINE></scoresString>
+  <scoreLoop><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>377</LINE></scoreLoop>
+  <checkScore><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>389</LINE></checkScore>
+  <END_SCORES><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>591</LINE></END_SCORES>
+  <writeScores><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>429</LINE></writeScores>
+  <ended><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>454</LINE></ended>
+  <FINDWINNER><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>460</LINE></FINDWINNER>
+  <WINNER_STRING><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>578</LINE></WINNER_STRING>
+  <winnerString><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>475</LINE></winnerString>
+  <winnerLoop><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>494</LINE></winnerLoop>
+  <keep><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>507</LINE></keep>
+  <SENDWINNER><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>517</LINE></SENDWINNER>
+  <Loop><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>540</LINE></Loop>
+  <OLoop><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>541</LINE></OLoop>
+  <ILoop><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>542</LINE></ILoop>
+  <TITLE_STRING_END><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>560</LINE></TITLE_STRING_END>
+  <PLAYERS_STRING_END><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>564</LINE></PLAYERS_STRING_END>
+  <GAME_STRING_END><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>568</LINE></GAME_STRING_END>
+  <WAIT_STRING><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>570</LINE></WAIT_STRING>
+  <WAIT_STRING_END><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>572</LINE></WAIT_STRING_END>
+  <SCORE_STRING_END><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>576</LINE></SCORE_STRING_END>
+  <WINNER_STRING_END><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>580</LINE></WINNER_STRING_END>
+  <END_PLAYERS><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\Server.asm</FILE><LINE>587</LINE></END_PLAYERS>
   <LCDINIT_L1><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\LCDDriver.asm</FILE><LINE>139</LINE></LCDINIT_L1>
   <LCDWait><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\LCDDriver.asm</FILE><LINE>492</LINE></LCDWait>
   <LCDWriteCmd><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\LCDDriver.asm</FILE><LINE>436</LINE></LCDWriteCmd>
   <LCDClr><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\LCDDriver.asm</FILE><LINE>230</LINE></LCDClr>
   <LCDWrite><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\LCDDriver.asm</FILE><LINE>170</LINE></LCDWrite>
-  <LCDWrLn1><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\LCDDriver.asm</FILE><LINE>180</LINE></LCDWrLn1>
-  <LCDWrLn2><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\LCDDriver.asm</FILE><LINE>205</LINE></LCDWrLn2>
   <LCDSetLine><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\LCDDriver.asm</FILE><LINE>388</LINE></LCDSetLine>
   <LCDWriteLine><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\LCDDriver.asm</FILE><LINE>423</LINE></LCDWriteLine>
   <LCDClrLn1><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\LCDDriver.asm</FILE><LINE>240</LINE></LCDClrLn1>
   <LCDClrLn2><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\LCDDriver.asm</FILE><LINE>265</LINE></LCDClrLn2>
   <LCDClrLine><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\LCDDriver.asm</FILE><LINE>404</LINE></LCDClrLine>
-  <LCDWriteByte><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\LCDDriver.asm</FILE><LINE>302</LINE></LCDWriteByte>
   <LCDWriteByte_3><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\LCDDriver.asm</FILE><LINE>323</LINE></LCDWriteByte_3>
   <LCDWriteByte_1><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\LCDDriver.asm</FILE><LINE>313</LINE></LCDWriteByte_1>
   <LCDWriteByte_2><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\LCDDriver.asm</FILE><LINE>318</LINE></LCDWriteByte_2>
   <LCDWriteChar><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\LCDDriver.asm</FILE><LINE>457</LINE></LCDWriteChar>
-  <Bin2ASCII><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\LCDDriver.asm</FILE><LINE>339</LINE></Bin2ASCII>
   <B2A_1><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\LCDDriver.asm</FILE><LINE>352</LINE></B2A_1>
   <B2A_3><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\LCDDriver.asm</FILE><LINE>360</LINE></B2A_3>
   <B2A_2><FILE>C:\Users\Devlin\Dropbox\CS Stuff\ECE 375\AVR4\Lab7-BlackJack\LCDDriver.asm</FILE><LINE>357</LINE></B2A_2>

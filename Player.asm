@@ -29,7 +29,7 @@
 .def	sigr 	= r15
 .def	mpr 	= r16
 
-.def	waitcnt = r17				; Wait Loop Counter
+.def	waitcnt = r17			; Wait Loop Counter
 .def	ilcnt = r18				; Inner Loop Counter
 .def	olcnt = r19				; Outer Loop Counter
 
@@ -37,7 +37,7 @@
 .def 	ReadCnt = r24
 .def	timer	= r25
 
-.equ	BOARDID	= 0b00000110	; Unique Board ID = $01 (MSB = 0) ;
+.equ	BOARDID	= 0b00001000	; Unique Board ID = $01 (MSB = 0) ;
 
 .equ	TIMEOUT = 255			; Timeout Interval
 
@@ -158,7 +158,7 @@ INIT:
 ;*	Functions and Subroutines
 ;***********************************************************
 MAIN:
-		;rcall SETUP			; FOR TESTING GAME
+	;	rcall SETUP			; FOR TESTING GAME
 
 		; Loop for Recieve Complete
 	;	lds mpr, UCSR1A
@@ -492,6 +492,8 @@ WAITFORWINNER:
 		; FOR DEBUGGING
 		ldi mpr, $FF
 		sts PORTB, mpr
+
+		rcall WAITFUNC
 		
 		rcvLoop2:
 			lds mpr, UCSR1A
@@ -528,7 +530,7 @@ WAITFORWINNER:
 			brne	WriteWinner	; Continue until all data is read
 			rcall	LCDWrLn2	; WRITE LINE 2 DATA
 		
-		rjmp END
+		rjmp WIN
 		
 		; SHOW LOSER	
 	LOSE:
@@ -548,7 +550,9 @@ WAITFORWINNER:
 			dec		ReadCnt		; Decrement Read Counter
 			brne	WriteLoser	; Continue until all data is read
 			rcall	LCDWrLn2	; WRITE LINE 2 DATA
-	
+		
+		rjmp LOSE		
+
 	END:
 		ret
 
