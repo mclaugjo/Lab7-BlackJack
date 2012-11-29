@@ -12,8 +12,8 @@
 ;*
 ;***********************************************************
 ;*
-;*	 Author: Devlin Junker
-;*	   Date: November 23rd 2012
+;*	 Authors: Devlin Junker, Joshua McLaughlin
+;*	   Date: November 28rd 2012
 ;*
 ;***********************************************************
 .include "m128def.inc"			; Include definition file
@@ -153,27 +153,6 @@ INITGAME:
 ;***********************************************************
 
 MAIN:
-		; Enable Transmitter
-	;	ldi mpr, (1<<TXEN1)
-	;	sts UCSR1B, mpr			
-
-	;	ldi mpr, NEW 			; Load New Game Command
-	;	sts UDR1, mpr			; Send Command
-		
-	;	out PORTB, mpr
-	;	call WAITFUNC
-
-	;	finishNew:
-	;		lds mpr, UCSR1A	
-	;		sbrs mpr, UDRE1	
-	;		rjmp finishNew		; Loop if transmission not finished
-			
-	;	; Load Timeout Value to Timer Register
-	;	ldi timer, TIMEOUT
-		
-	;	; Enable Reciever
-	;	ldi mpr, (1<<RXEN1)
-	;	sts UCSR1B, mpr
 
 		checkRcvdNew:
 			dec timer			; Decrement the Timer
@@ -199,12 +178,10 @@ MAIN:
 			cpi sigr, JOIN		; Compare Command against Join
 			breq addPlayer		; If Equal, add Player
 
-			rjmp checkRcvdNew	; Otherwise, return to beginning and wait for new signal
+			rjmp checkRcvdNew	; Otherwise, return to beginning and wait for new 
+; signal
 
-			addPlayer:
-				; Enable Transmitter
-				;ldi mpr, (1<<TXEN1)
-				;sts UCSR1B, mpr			
+			addPlayer:			
 				
 				; Send Recieved Join Signal		
 				ldi mpr, RECIEVE
@@ -218,7 +195,7 @@ MAIN:
 				finishRcvJoin:
 					lds mpr, UCSR1A	
 					sbrs mpr, UDRE1	
-					rjmp finishRcvJoin; Loop if transmission not finished
+					rjmp finishRcvJoin			; Loop if transmission not finished
 
 				; Store ID in Player Array
 				st X+, idreg
@@ -236,18 +213,18 @@ MAIN:
 				; SET THE INITIAL X-PTR ADDRESS
 				ldi		XL, low(ScoreAddr)
 				ldi		XH, high(ScoreAddr)
-				rcall	Bin2ASCII		; CALL BIN2ASCII TO CONVERT DATA
-										; NOTE, COUNT REG HOLDS HOW MANY CHARS WRITTEN
+				rcall	Bin2ASCII				; CALL BIN2ASCII TO CONVERT DATA
+												; NOTE, COUNT REG HOLDS HOW MANY CHARS WRITTEN
 				; Write data to LCD display
-				ldi		ReadCnt, 1		; always write two chars to overide existing data in LCD
-				ldi		line, 2			; SET LINE TO 1 TO WRITE TO LINE 1
-				ldi		count, 12		; SET COUNT TO 10 TO START WRITTING TO THE TENTH INDEX
+				ldi		ReadCnt, 1				;always write two chars to overide existing data in LCD
+				ldi		line, 2					; SET LINE TO 1 TO WRITE TO LINE 1
+				ldi		count, 12				; SET COUNT TO 10 TO START WRITTING TO THE TENTH INDEX
 				writePlayers:
-					ld		mpr, X+		; LOAD MPR WITH DATA TO WRITE
-					rcall	LCDWriteByte; CALL LCDWRITEBYTE TO WRITE DATA TO LCD DISPLAY
-					inc		count		; INCREMENT COUNT TO WRITE TO NEXT LCD INDEX
-					dec		ReadCnt		; decrement read counter
-					brne	writePlayers; Countinue until all data is written		
+					ld		mpr, X+				; LOAD MPR WITH DATA TO WRITE
+					rcall	LCDWriteByte		; CALL LCDWRITEBYTE TO WRITE DATA TO LCD DISPLAY
+					inc		count				; INCREMENT COUNT TO WRITE TO NEXT LCD INDEX
+					dec		ReadCnt				; decrement read counter
+					brne	writePlayers		; Continue until all data is written		
 
 				; Restore X Pointer and Player Register
 				pop count
@@ -262,6 +239,11 @@ MAIN:
 				rcall STARTGAME	; If not, call STARTGAME
 
 		rjmp MAIN
+;***********************************************************
+; Func: StartGame
+; Desc: Sends the Start signal to each of the players
+; 		
+;***********************************************************
 
 
 STARTGAME:
@@ -300,7 +282,6 @@ STARTGAME:
 			ori mpr, START 		; OR with Start Game Command
 			sts UDR1, mpr		; Send Command
 
-	;		out PORTB, mpr
 	
 			call WAITFUNC
 			
@@ -308,35 +289,32 @@ STARTGAME:
 			finishStart:
 				lds mpr, UCSR1A	
 				sbrs mpr, UDRE1	
-				rjmp finishStart; Loop if transmission not finished
+				rjmp finishStart		; Loop if transmission not finished
 
 			; Load Timeout Value to Timer Register
 			ldi timer, TIMEOUT
 		
 			checkRcvd:
-				dec timer		; Decrement the Timer
-				breq startLoop	; If 0, Resend Start Game Command
-				lds mpr, UCSR1A	; Otherwise, check if Recieve Complete
+				dec timer			; Decrement the Timer
+				breq startLoop		; If 0, Resend Start Game Command
+				lds mpr, UCSR1A		; Otherwise, check if Recieve Complete
 				sbrs mpr, RXC1
-				rjmp checkRcvd	; If not, loop for Recieve Complete
+				rjmp checkRcvd		; If not, loop for Recieve Complete
 
-				lds sigr, UDR1	; Load Recieved Signal into Signal Register
+				lds sigr, UDR1		; Load Recieved Signal into Signal Register
 
-				mov mpr, idreg	; Move ID we're waiting for to MPR
-				ori mpr, RECIEVE; OR with Command to get Expected Signal
+				mov mpr, idreg		; Move ID we're waiting for to MPR
+				ori mpr, RECIEVE	; OR with Command to get Expected Signal
 
-				cp sigr, mpr	; Compare Recieved vs Expected Signal
-				brne checkRcvd	; If not equal, wait for new Recieve Complete
-				
-	;		out PORTB, sigr
-	;		call WAITFUNC
+				cp sigr, mpr		; Compare Recieved vs Expected Signal
+				brne checkRcvd		; If not equal, wait for new Recieve Complete
 
 			; Check if Sent to All Players
 			cpi XL, low(PLAYERS<<1)
-			breq started		; If so, call ASK SCORES
+			breq started			; If so, call ASK SCORES
 
-			ld idreg, -X		; Otherwise, Load Next ID into ID Register
-			rjmp startLoop		; And send next Start Game Command
+			ld idreg, -X			; Otherwise, Load Next ID into ID Register
+			rjmp startLoop			; And send next Start Game Command
 
 
 	started:
@@ -344,6 +322,12 @@ STARTGAME:
 		rcall ASKSCORES
 		
 		ret
+
+;***********************************************************
+; Func: AskScores
+; Desc: Asks for and receives the scores from the players’ boards
+; 		
+;***********************************************************
 
 ASKSCORES:
 		push YL
@@ -361,10 +345,10 @@ ASKSCORES:
 
 		; Move Search String from Program Memory to Data Memory
 		scoresString:		
-			lpm		mpr, Z+		; Read Program memory
-			st		Y+, mpr		; Store into memory
-			dec		ReadCnt		; Decrement Read Counter
-			brne	scoresString; Continue untill all data is read
+			lpm		mpr, Z+			; Read Program memory
+			st		Y+, mpr			; Store into memory
+			dec		ReadCnt			; Decrement Read Counter
+			brne	scoresString	; Continue untill all data is read
 		
 		; WRITE LINE 2 DATA
 		rcall	LCDWrLn2	
@@ -387,21 +371,21 @@ ASKSCORES:
 			ldi timer, TIMEOUT
 
 			checkScore:
-				dec timer		; Decrement the Timer
-				breq scoreLoop	; If 0, Resend Ask Score Command
+				dec timer			; Decrement the Timer
+				breq scoreLoop		; If 0, Resend Ask Score Command
 				lds mpr, UCSR1A
-				sbrs mpr, RXC1	; Otherwise, check if Recieve Complete
-				rjmp checkScore ; If not, loop for Recieve Complete
+				sbrs mpr, RXC1		; Otherwise, check if Recieve Complete
+				rjmp checkScore		; If not, loop for Recieve Complete
 
 				lds sigr, UDR1
 					
 				out PORTB, sigr
 				call WAITFUNC
 
-				sbrc sigr, 7	; Check if MSB is cleared (Score Value)
-				rjmp checkScore	; If not, Wait for Score
+				sbrc sigr, 7		; Check if MSB is cleared (Score Value)
+				rjmp checkScore		; If not, Wait for Score
 				
-			st Y+, sigr			; If so, Store Score in Score Array			
+			st Y+, sigr				; If so, Store Score in Score Array			
 
 			mov mpr, sigr		
 
@@ -414,35 +398,31 @@ ASKSCORES:
 			; SET THE INITIAL X-PTR ADDRESS
 			ldi		XL, low(ScoreAddr)
 			ldi		XH, high(ScoreAddr)
-			rcall	Bin2ASCII		; CALL BIN2ASCII TO CONVERT DATA
-									; NOTE, COUNT REG HOLDS HOW MANY CHARS WRITTEN
+			rcall	Bin2ASCII			; CALL BIN2ASCII TO CONVERT DATA
+										; NOTE, COUNT REG HOLDS HOW MANY CHARS WRITTEN
 			; Write data to LCD display
-			ldi		ReadCnt, 2		; always write two chars to overide existing data in LCD
-			ldi		line, 2			; SET LINE TO 1 TO WRITE TO LINE 1
+			ldi		ReadCnt, 2			; always write two chars to overide existing data in LCD
+			ldi		line, 2				; SET LINE TO 1 TO WRITE TO LINE 1
 			
 			cpi 	YL, low(END_SCORES<<1)
 			in	 	mpr, SREG
 			sbrs 	mpr, SREG_Z
 			ldi 	count, 12
 
-			ldi		count, 9		; SET COUNT TO 10 TO START WRITTING TO THE TENTH INDEX
+			ldi		count, 9				; SET COUNT TO 10 TO START WRITTING TO THE TENTH INDEX
 			writeScores:
-				ld		mpr, X+		; LOAD MPR WITH DATA TO WRITE
-				rcall	LCDWriteByte; CALL LCDWRITEBYTE TO WRITE DATA TO LCD DISPLAY
-				inc		count		; INCREMENT COUNT TO WRITE TO NEXT LCD INDEX
-				dec		ReadCnt		; decrement read counter
-				brne	writeScores	; Countinue until all data is written		
+				ld		mpr, X+				; LOAD MPR WITH DATA TO WRITE
+				rcall	LCDWriteByte		; CALL LCDWRITEBYTE TO WRITE DATA TO LCD DISPLAY
+				inc		count				; INCREMENT COUNT TO WRITE TO NEXT LCD INDEX
+				dec		ReadCnt				; decrement read counter
+				brne	writeScores			; Countinue until all data is written		
 
 			; Restore X Pointer and Player Register
 			pop count
 			pop line
 			pop XH
 			pop XL
-
-			; Send Recieved Score Command
-		;	mov mpr, idreg
-		;	ori mpr, RECIEVE
-		;	sts UDR1, mpr			
+		
 
 			; Check if Recieved All Scores
 			cpi YL, low(END_SCORES<<1)
@@ -455,6 +435,11 @@ ASKSCORES:
 		rcall FINDWINNER
 
 		ret
+;***********************************************************
+; Func: FindWinner
+; Desc: Determines which player’s score was closest to 70 without going over
+; 		
+;***********************************************************
 
 
 FINDWINNER:
@@ -473,10 +458,10 @@ FINDWINNER:
 
 		; Move Search String from Program Memory to Data Memory
 		winnerString:		
-			lpm		mpr, Z+		; Read Program memory
-			st		Y+, mpr		; Store into memory
-			dec		ReadCnt		; Decrement Read Counter
-			brne	winnerString; Continue untill all data is read
+			lpm		mpr, Z+			; Read Program memory
+			st		Y+, mpr			; Store into memory
+			dec		ReadCnt			; Decrement Read Counter
+			brne	winnerString	; Continue untill all data is read
 		
 		; WRITE LINE 2 DATA
 		rcall	LCDWrLn2	
@@ -513,6 +498,11 @@ FINDWINNER:
 		rcall SENDWINNER		; Otherwise, Send the Winner Command
 
 		ret
+;***********************************************************
+; Func: SendWinner
+; Desc: Sends the Win signal with the BoardID of the Winning Player
+; 		
+;***********************************************************
 
 SENDWINNER:	
 		; Create and Send Winner Command
@@ -526,8 +516,8 @@ SENDWINNER:
 		ret
 
 ;***********************************************************
-; Func: WaitForWinner
-; Desc: Waits for The Server's Signal with the Winner
+; Func: WaitFunc
+; Desc: Waits for a determined amount of time
 ; 		
 ;***********************************************************
 WAITFUNC:
@@ -595,4 +585,5 @@ END_SCORES:
 ;*	Additional Program Includes
 ;***********************************************************
 .include "LCDDriver.asm"		; Include the LCD Driver
+
 

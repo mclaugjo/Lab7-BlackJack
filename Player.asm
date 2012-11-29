@@ -15,8 +15,8 @@
 ;*
 ;***********************************************************
 ;*
-;*	 Author: Joshua McLaughlin
-;*	   Date: November 11th 2012
+;*	 Author: Devlin Junker, Joshua McLaughlin 
+;*	   Date: November 28th 2012
 ;*
 ;***********************************************************
 
@@ -158,20 +158,6 @@ INIT:
 ;*	Functions and Subroutines
 ;***********************************************************
 MAIN:
-	;	rcall SETUP			; FOR TESTING GAME
-
-		; Loop for Recieve Complete
-	;	lds mpr, UCSR1A
-	;	sbrs mpr, RXC1			
-	;	rjmp MAIN				; Loop Until Recieve Complete
-
-		; Load Recieved Signal into Signal Register
-	;	lds sigr, UDR1
-		
-	;	ldi mpr, NEW
-		; Compare Signal with New Game Signal
-	;	cp sigr, mpr
-	;	brne MAIN				; If Not New Game Signal, return to Recieve Loop	
 
 		rcall SENDJOIN			; If it is, send Join Command
 
@@ -179,7 +165,7 @@ MAIN:
 
 
 ;***********************************************************
-; Func: TransJoin
+; Func: SendJoin
 ; Desc: Sends the join game signal out of it's IR
 ; 		
 ;***********************************************************
@@ -219,9 +205,7 @@ SENDJOIN:
 
 			ldi mpr, BOARDID	; Move Our ID to MPR
 			ori mpr, RECIEVE	; OR with Recieve Command to get Expected Signal
-
-	;		out PORTB, mpr		
-	;		rcall WAITFUNC			
+	
 
 			cp sigr, mpr		; Compare Recieved vs Expected Signal
 			brne checkRcvdJoin	; If not equal, wait for new Recieve Complete
@@ -239,8 +223,8 @@ SENDJOIN:
 
 
 ;***********************************************************
-; Func: StartGame
-; Desc: Begins the Game
+; Func: WaitForStart
+; Desc: Wait for Start signal from Server
 ; 		
 ;***********************************************************
 WAITFORSTART:
@@ -257,11 +241,11 @@ WAITFORSTART:
 	
 		; Move Game String from Program Memory to Data Memory
 		writeWaitStart:		
-			lpm		mpr, Z+		; Read Program memory
-			st		Y+, mpr		; Store into memory
-			dec		ReadCnt		; Decrement Read Counter
-			brne	writeWaitStart; Continue untill all data is read		
-			rcall	LCDWrLn2	; WRITE LINE 2 DATA
+			lpm		mpr, Z+			; Read Program memory
+			st		Y+, mpr			; Store into memory
+			dec		ReadCnt			; Decrement Read Counter
+			brne	writeWaitStart	; Continue untill all data is read		
+			rcall	LCDWrLn2		; WRITE LINE 2 DATA
 
 		; Check for Recieved
 		lds mpr, UCSR1A
@@ -290,8 +274,8 @@ WAITFORSTART:
 
 
 ;***********************************************************
-; Func: StartGame
-; Desc: Begins the Game
+; Func: SETUP
+; Desc: Sets up the Game
 ; 		
 ;***********************************************************
 SETUP:
@@ -338,8 +322,8 @@ SETUP:
 
 		ret
 ;***********************************************************
-; Func: StartGame
-; Desc: Begins the Game
+; Func: Game
+; Desc: Begins and plays the Game
 ; 		
 ;***********************************************************
 GAME:
@@ -356,6 +340,7 @@ GAME:
 		ldi		XH, high(ScoreAddr)
 		rcall	Bin2ASCII		; CALL BIN2ASCII TO CONVERT DATA
 								; NOTE, COUNT REG HOLDS HOW MANY CHARS WRITTEN
+
 		; Write data to LCD display
 		ldi		ReadCnt, 2		; always write two chars to overide existing data in LCD
 		ldi		line, 1			; SET LINE TO 1 TO WRITE TO LINE 1
@@ -365,7 +350,7 @@ GAME:
 			rcall	LCDWriteByte; CALL LCDWRITEBYTE TO WRITE DATA TO LCD DISPLAY
 			inc		count		; INCREMENT COUNT TO WRITE TO NEXT LCD INDEX
 			dec		ReadCnt		; decrement read counter
-			brne	writeScore	; Countinue until all data is written		
+			brne	writeScore		; Countinue until all data is written		
 
 		cpi scorereg, 71
 		brge bust
@@ -431,7 +416,7 @@ GAME:
 
 ;***********************************************************
 ; Func: WaitForAsk
-; Desc: Waits for The Server's Signal
+; Desc: Waits for the Server's Signal
 ; 		
 ;***********************************************************
 WAITFORASK:
@@ -445,9 +430,7 @@ WAITFORASK:
 		ldi mpr, (BOARDID)|(ASK)
 		CPSE sigr, mpr
 		rjmp WAITFORASK			;If not equal, loop around
-		
-	;	out PORTB, sigr
-	;	call WAITFUNC		
+				
 
 		scoreLoop:
 			sts UDR1, scorereg	; Send Score
@@ -461,20 +444,6 @@ WAITFORASK:
 			; Load Timeout Value to Timer Register
 			ldi timer, TIMEOUT
 
-	;		checkRcvd:
-	;			dec timer		; Decrement the Timer
-	;			breq scoreLoop	; If 0, Resend Start Game Command
-	;			lds mpr, UCSR1A	; Otherwise, check if Recieve Complete
-	;			sbrs mpr, RXC1
-	;			rjmp checkRcvd	; If not, loop for Recieve Complete
-
-	;			lds sigr, UDR1	; Load Recieved Signal into Signal Register
-				
-	;			ldi mpr, BOARDID; Move Our ID to MPR
-	;			ori mpr, RECIEVE; OR with Recieve Command to get Expected Signal
-
-	;			cp sigr, mpr	; Compare Recieved vs Expected Signal
-	;			brne checkRcvd	; If not equal, wait for new Recieve Complete
 
 		; Once Score is Recieved, Call WAITFORWINNER
 		rcall WAITFORWINNER
@@ -557,8 +526,8 @@ WAITFORWINNER:
 		ret
 
 ;***********************************************************
-; Func: WaitForWinner
-; Desc: Waits for The Server's Signal with the Winner
+; Func: WaitFunc
+; Desc: Waits for a designated amount of time
 ; 		
 ;***********************************************************
 WAITFUNC:
